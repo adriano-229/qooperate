@@ -1,1 +1,7 @@
 /resources/*
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.idea
+/code/src/qooperate.egg-info/*
