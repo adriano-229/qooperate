@@ -15,6 +15,10 @@ class PayoffMatrix:
         assert 2 * self.R > self.T + self.S
 
     def payoff(self, my_action: int, other_action: int) -> float:
-        table = {(COOPERATE, COOPERATE): self.R, (COOPERATE, DEFECT): self.S,
-                 (DEFECT, COOPERATE): self.T, (DEFECT, DEFECT): self.P}
+        table = {
+            (COOPERATE, COOPERATE): self.R,
+            (COOPERATE, DEFECT): self.S,
+            (DEFECT, COOPERATE): self.T,
+            (DEFECT, DEFECT): self.P,
+        }
         return table[(my_action, other_action)]

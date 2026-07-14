@@ -13,14 +13,19 @@ class SimulationResult:
 
 
 class Simulation:
-    def __init__(self, graph, agent_params, payoff_matrix, rng,
-                 coop_bins, reward_bins):
+
+    def __init__(self, graph, agent_params, payoff_matrix, rng, coop_bins, reward_bins):
         self.adjacency = build_adjacency_list(graph)
         n = graph.number_of_nodes()
         self.agents = [
-            QLearningAgent(agent_params["alpha"], agent_params["gamma"],
-                           agent_params["epsilon"], 36, 2, rng,
-                           initial_action=rng.integers(0, 2))
+            QLearningAgent(
+                agent_params["alpha"],
+                agent_params["gamma"],
+                agent_params["epsilon"],
+                36,
+                2,
+                rng,
+            )
             for _ in range(n)
         ]
         self.payoff_matrix = payoff_matrix
@@ -31,7 +36,7 @@ class Simulation:
         coop_rate = np.zeros(n_rounds)
         mean_reward = np.zeros(n_rounds)
 
-        for t in range(n_rounds):
+        for r in range(n_rounds):
 
             # 1. observación
             states = []
@@ -41,9 +46,7 @@ class Simulation:
                     neighbor_actions.append(self.agents[j].last_action)
 
                 state = self.agents[i].compute_state(
-                    neighbor_actions,
-                    self.coop_bins,
-                    self.reward_bins
+                    neighbor_actions, self.coop_bins, self.reward_bins
                 )
                 states.append(state)
 
@@ -77,20 +80,13 @@ class Simulation:
                     neighbor_actions.append(actions[j])
 
                 next_state = self.agents[i].compute_state(
-                    neighbor_actions,
-                    self.coop_bins,
-                    self.reward_bins
+                    neighbor_actions, self.coop_bins, self.reward_bins
                 )
                 next_states.append(next_state)
 
             # 6. aprendizaje
             for i in range(n):
-                self.agents[i].update(
-                    states[i],
-                    actions[i],
-                    rewards[i],
-                    next_states[i]
-                )
+                self.agents[i].update(states[i], actions[i], rewards[i], next_states[i])
 
             # 7. actualizar última acción
             for i in range(n):
@@ -102,7 +98,7 @@ class Simulation:
                 if action == COOPERATE:
                     coop_count += 1
 
-            coop_rate[t] = coop_count / n
-            mean_reward[t] = np.mean(rewards)
+            coop_rate[r] = coop_count / n
+            mean_reward[r] = np.mean(rewards)
 
         return SimulationResult(coop_rate, mean_reward)
