@@ -1,104 +1,154 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
+from tqdm import tqdm
 
 from qooperate.agent import QLearningAgent, COOPERATE
+from qooperate.metrics import compute_gini
 from qooperate.network import build_adjacency_list
+from qooperate.utils import n_states as compute_n_states
+
+N_ACTIONS = 2
 
 
 @dataclass
 class SimulationResult:
+    """Serie sub-muestreada a los puntos de checkpoint (ver sample_every).
+
+    gini_window es un Gini de ventana (resetea cada checkpoint), no el
+    Gini acumulado histórico total. Ver NOTES.md.
+    final_cumulative_reward sí es la recompensa acumulada total, nunca
+    resetea, y no incluye rondas en que un agente quedó aislado.
+    """
+
+    rounds: np.ndarray
     cooperation_rate: np.ndarray
+    gini_window: np.ndarray
     mean_reward: np.ndarray
+    final_cumulative_reward: np.ndarray = field(repr=False)
 
 
 class Simulation:
+    """Ejecuta el IPD multiagente sobre una red fija (ver doc. sección 2.8)."""
 
-    def __init__(self, graph, agent_params, payoff_matrix, rng, coop_bins, reward_bins):
-        self.adjacency = build_adjacency_list(graph)
+    def __init__(
+            self,
+            graph,
+            agent_params: dict,
+            payoff_matrix,
+            rng: np.random.Generator,
+            coop_bins: list[float],
+            reward_bins: list[float],
+            reward_window: int,
+            sample_every: int = 1,
+            rho: int = 1,
+    ):
+        if sample_every < 1:
+            raise ValueError("sample_every debe ser >= 1")
+        if rho < 1:
+            raise ValueError("rho debe ser >= 1")
+        self.adjacency = build_adjacency_list(graph, rho=rho)
         n = graph.number_of_nodes()
+        self.n = n
+        n_s3, n_s4 = len(coop_bins) + 1, len(reward_bins) + 1
+        n_states = compute_n_states(n_s3, n_s4)
+        # Nodos sin vecinos (posibles en Erdős-Rényi/Watts-Strogatz, ver
+        # NOTES.md): no juegan, se excluyen de coop_rate y gini_window.
+        self.isolated = np.array([len(adj) == 0 for adj in self.adjacency])
         self.agents = [
             QLearningAgent(
                 agent_params["alpha"],
                 agent_params["gamma"],
                 agent_params["epsilon"],
-                36,
-                2,
+                n_states,
+                N_ACTIONS,
+                reward_window,
                 rng,
             )
             for _ in range(n)
         ]
         self.payoff_matrix = payoff_matrix
-        self.coop_bins, self.reward_bins = coop_bins, reward_bins
+        self.coop_bins = coop_bins
+        self.reward_bins = reward_bins
+        self.sample_every = sample_every
+        self.cumulative_reward = np.zeros(n)
 
-    def run(self, n_rounds: int) -> SimulationResult:
-        n = len(self.agents)
-        coop_rate = np.zeros(n_rounds)
-        mean_reward = np.zeros(n_rounds)
+    def run(self, n_rounds: int, show_progress: bool = True) -> SimulationResult:
+        n = self.n
+        agents = self.agents
+        sample_every = self.sample_every
+        connected = ~self.isolated
 
-        for r in range(n_rounds):
+        window_reward = np.zeros(n)
+        checkpoint_rounds = []
+        checkpoint_coop = []
+        checkpoint_gini_window = []
+        checkpoint_mean_reward = []
 
-            # 1. observación
-            states = []
-            for i in range(n):
-                neighbor_actions = []
-                for j in self.adjacency[i]:
-                    neighbor_actions.append(self.agents[j].last_action)
+        last_actions = [a.last_action for a in agents]
 
-                state = self.agents[i].compute_state(
-                    neighbor_actions, self.coop_bins, self.reward_bins
+        for t in tqdm(range(n_rounds), desc="Simulation", leave=False, disable=not show_progress):
+            states = [
+                agents[i].compute_state(
+                    [last_actions[j] for j in self.adjacency[i]],
+                    self.coop_bins,
+                    self.reward_bins,
+                    last_actions[i],
                 )
-                states.append(state)
+                for i in range(n)
+            ]
+            actions = [agents[i].select_action(states[i]) for i in range(n)]
 
-            # 2. decisión
-            actions = []
-            for i in range(n):
-                action = self.agents[i].select_action(states[i])
-                actions.append(action)
+            # Recompensa promedio contra todos los vecinos (sección 2.1).
+            # Nodos aislados no juegan: recompensa 0, no error/NaN.
+            rewards = np.array(
+                [
+                    float(np.mean([self.payoff_matrix.payoff(actions[i], actions[j]) for j in self.adjacency[i]]))
+                    if self.adjacency[i]
+                    else 0.0
+                    for i in range(n)
+                ]
+            )
 
-            # 3. recompensa
-            rewards = []
-            for i in range(n):
-                neighbor_rewards = []
+            self.cumulative_reward += rewards
+            window_reward += rewards
 
-                for j in self.adjacency[i]:
-                    reward = self.payoff_matrix.payoff(actions[i], actions[j])
-                    neighbor_rewards.append(reward)
-
-                rewards.append(np.mean(neighbor_rewards))
-
-            # 4. historial
-            for i in range(n):
-                self.agents[i].reward_history.append(rewards[i])
-
-            # 5. siguiente estado
-            next_states = []
-            for i in range(n):
-                neighbor_actions = []
-
-                for j in self.adjacency[i]:
-                    neighbor_actions.append(actions[j])
-
-                next_state = self.agents[i].compute_state(
-                    neighbor_actions, self.coop_bins, self.reward_bins
+            # Estado siguiente: s2 debe ser la acción recién tomada
+            # (actions[i]), no la de la ronda anterior.
+            next_states = [
+                agents[i].compute_state(
+                    [actions[j] for j in self.adjacency[i]],
+                    self.coop_bins,
+                    self.reward_bins,
+                    actions[i],
                 )
-                next_states.append(next_state)
+                for i in range(n)
+            ]
 
-            # 6. aprendizaje
             for i in range(n):
-                self.agents[i].update(states[i], actions[i], rewards[i], next_states[i])
-
-            # 7. actualizar última acción
+                agents[i].update(states[i], actions[i], rewards[i], next_states[i])
             for i in range(n):
-                self.agents[i].last_action = actions[i]
+                agents[i].last_action = actions[i]
+                agents[i].reward_history.append(rewards[i])
+            last_actions = actions
 
-            # 8. registro
-            coop_count = 0
-            for action in actions:
-                if action == COOPERATE:
-                    coop_count += 1
+            is_checkpoint = ((t + 1) % sample_every == 0) or (t == n_rounds - 1)
+            if is_checkpoint:
+                played_actions = [a for a, c in zip(actions, connected) if c]
+                coop_rate_t = np.mean([a == COOPERATE for a in played_actions]) if played_actions else 0.0
+                gini_window_t = compute_gini(window_reward[connected]) if connected.any() else 0.0
 
-            coop_rate[r] = coop_count / n
-            mean_reward[r] = np.mean(rewards)
+                checkpoint_rounds.append(t)
+                checkpoint_coop.append(coop_rate_t)
+                checkpoint_gini_window.append(gini_window_t)
+                checkpoint_mean_reward.append(rewards[connected].mean() if connected.any() else 0.0)
 
-        return SimulationResult(coop_rate, mean_reward)
+                window_reward = np.zeros(n)
+
+        return SimulationResult(
+            rounds=np.array(checkpoint_rounds, dtype=int),
+            cooperation_rate=np.array(checkpoint_coop),
+            gini_window=np.array(checkpoint_gini_window),
+            mean_reward=np.array(checkpoint_mean_reward),
+            final_cumulative_reward=self.cumulative_reward.copy(),
+        )

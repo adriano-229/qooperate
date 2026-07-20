@@ -1,0 +1,14 @@
+topology: watts_strogatz
+n_agents: 100
+k: 12
+alpha: 0.1
+epsilon: 0.1
+gamma: 0.9
+rho: 1
+seed: 5
+n_rounds: 12000
+reward_window: 10
+sample_every: 10
+coop_n_divisions: 2
+reward_n_divisions: 2
+ws_beta: 0.1
