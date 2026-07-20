@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 *.idea
 /code/src/qooperate.egg-info/*
+code/experiments/overlay.py

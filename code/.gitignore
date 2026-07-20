@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-.venv/
-venv/
-results/**/*.parquet
-results/figures/
-*.egg-info/
-.pytest_cache/
