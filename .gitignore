@@ -6,3 +6,8 @@ __pycache__/
 *.idea
 /code/src/qooperate.egg-info/*
 code/experiments/overlay.py
+/code/config/expz/expz_base.yaml
+/code/config/test/test_base.yaml
+/code/results/expz/expz_base.parquet
+/code/results/figures/expz/expz_base.png
+/code/results/test/test_base.parquet
