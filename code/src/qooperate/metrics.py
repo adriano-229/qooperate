@@ -25,7 +25,3 @@ def moving_average(series: np.ndarray, window: int) -> np.ndarray:
         lo = max(0, t - window + 1)
         result[t] = (cumsum[t + 1] - cumsum[lo]) / (t + 1 - lo)
     return result
-
-
-def temporal_stability(coop_rate: np.ndarray, window: int) -> float:
-    return coop_rate[-window:].std()

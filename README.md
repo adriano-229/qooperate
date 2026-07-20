@@ -7,26 +7,28 @@ agentes Q-Learning que juegan un Dilema del Prisionero Iterado con sus vecinos.
 
 **Alumno:** Adriano Fabris
 
+> ⚠️ Este documento describe el proyecto y los experimentos que se llevarán a cabo, lo marcado con ~~tachado~~ indica un
+> contenido eliminado con respecto al anteproyecto. Para ver los motivos, ver la sección "Cambios al anteproyecto" al
+> final de este
+> documento.
+
 ---
 
 ## Instalación
 
-Colocarse en la carpeta `/code` del proyecto y ejecutar:
+Para instalar el paquete con las dependencias necesarias hay que colocarse en la carpeta `/code` y ejecutar:
 
 ```bash
 pip install -e .
 ```
-
-Instala `qooperate` (en `src/qooperate/`) en modo editable, de modo que cualquier cambio en el código fuente se refleje
-inmediatamente sin necesidad de reinstalar.
 
 ---
 
 ## Objetivo
 
 El proyecto busca explorar el surgimiento o colapso de la cooperación en sociedades artificiales dinámicas compuestas
-por agentes racionales que aprenden mediante refuerzo, evaluando cómo la estructura social (topología de red) y el
-alcance de la información local influyen en el comportamiento colectivo.
+por agentes racionales que aprenden mediante refuerzo, evaluando cómo la estructura social (topología de red) y la
+utilización de la información local influyen en el comportamiento colectivo.
 
 La meta principal es observar bajo qué condiciones emergen patrones estables de cooperación o, si no es posible, por
 qué.
@@ -39,14 +41,15 @@ El trabajo se apoya en dos ejes conceptuales: el Reinforcement Learning (RL) y l
 
 ### Reinforcement Learning
 
-En el primero, cada agente aplica el algoritmo **Q-Learning**, cuya regla de actualización se expresa como:
+Los agenten aplican el algoritmo de **Q-Learning**, cuya regla de actualización se expresa como:
 
 $$Q(s,a) \leftarrow Q(s,a) + \alpha \big(r + \gamma \max_{a'} Q(s',a') - Q(s,a)\big)$$
 
 donde $\alpha$ es la tasa de aprendizaje, $\gamma$ el factor de descuento, $r$ la recompensa inmediata y $(s, a)$ el par
 estado-acción.
 
-En un entorno multiagente, cada individuo percibe un _entorno no estacionario_, ya que los demás también aprenden y
+En un entorno multiagente como el presente, cada individuo percibe un _entorno no estacionario_, ya que los demás
+también aprenden y
 adaptan su política, generando una dinámica colectiva cambiante. Por tanto, el objetivo no es la convergencia del
 aprendizaje, que bajo esta premisa deja de estar garantizada, sino la observación y el análisis del comportamiento
 adaptativo del sistema.
@@ -60,12 +63,12 @@ agentes eligen una acción entre 2 posibles: cooperar (C) o desertar (D).
 El Dilema del Prisionero es un juego de suma no nula, donde la cooperación mutua genera un beneficio conjunto mayor que
 la deserción
 mutua, si bien la acción de desertar frente a un cooperador resulta ser la mejor opción desde el punto de vista
-individual.
+individual y cortoplacista.
 La iteración surge de la repetición de este juego entre distintos pares de agentes situados en un grafo, permitiendo que
 se desarrollen estrategias basadas en la historia de interacciones previas.
 
 La matriz de recompensas utilizada es la canónica de la literatura, y por lo tanto cumple $T > R > P > S$
-y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero donde:
+y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero.
 
 | Parámetro                                | Símbolo | Valor |
 |------------------------------------------|---------|-------|
@@ -88,20 +91,21 @@ Las simulaciones se realizan sobre tres tipos de redes.
 
 ## Descripción del Framework
 
-El entorno modela una población de $N$ agentes, cada uno de los cuales interactúa con sus vecinos definidos por la red.
-En cada ronda, cada agente juega un Dilema del Prisionero con sus contactos, elige su acción $a_t \in \{C, D\}$
-siguiendo una política $\varepsilon$-greedy y actualiza su tabla $Q$ con base en la recompensa media obtenida.
+El entorno modela una población de $N$ agentes, cada uno de los cuales interactúa con sus vecinos definidos por el
+grafo.
+En cada ronda, cada agente juega un Dilema del Prisionero con sus vecinos, elige su acción $a_t \in \{C, D\}$
+siguiendo una política $\varepsilon$-greedy y actualiza su tabla $Q$ con base en la recompensa media obtenida en esa
+ronda.
 
-Es importante destacar que no existe una fase de entrenamiento separada; los agentes aprenden y adaptan su
-comportamiento durante toda la simulación. El _aprendizaje y la interacción ocurren simultáneamente_, es por ello que la
-convergencia no está garantizada.
+Es importante destacar que no existe una fase de entrenamiento separada; los agentes aprenden y aplican la política
+aprendida simultáneamente durante toda la simulación.
 
 El **estado local** $s$ está definido por un conjunto reducido de variables:
 
 - Acción mayoritaria observada en el vecindario en la ronda anterior
 - Última acción propia
 - Tasa de cooperación del vecindario en la ronda anterior
-- Recompensa media propia reciente
+- Recompensa media propia reciente (reciente = promedio de recompensas obtenidas en las últimas `reward_window` rondas)
 
 Estas variables se discretizan para mantener un espacio de estados manejable.
 
@@ -113,7 +117,7 @@ vecindario directo de la red; `ρ>1` incluye también vecinos a distancia 2, 3, 
 
 ## Diseño
 
-Cada archivo YAML en `config/` describe una única corrida.
+Cada archivo YAML en `config/` describe una única corrida y por lo tanto una única combinación de valores de parámetros.
 
 ### Parámetros configurables
 
@@ -125,7 +129,7 @@ Cada archivo YAML en `config/` describe una única corrida.
 | `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | `0.1`             | > 0                                                   |
 | `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | `0.1`             | > 0                                                   |
 | `gamma`              | Factor de descuento en Q-Learning                                                                                     | `0.9`             | > 0                                                   |
-| `rho`                | Profundidad del vecindario de juego (ver Framework)                                                                   | `1`               | ≥ 1                                                   |
+| `rho`                | Profundidad del vecindario de juego                                                                                   | `1`               | ≥ 1                                                   |
 | `seed`               | Semilla para reproducibilidad                                                                                         | `0`               | ≥ 0                                                   |
 | `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | `2000`            | > 0                                                   |
 | `reward_window`      | Ventana de recompensa reciente usada en el estado                                                                     | `10`              | ≥ 1                                                   |
@@ -147,14 +151,14 @@ python experiments/generate_yamls.py
 Pide un nombre de experimento y luego cada parámetro de la tabla anterior, uno por uno, con su valor por defecto entre
 paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se puede pasar más de un valor por parámetro,
 separados por espacio (ej.
-`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el **producto cartesiano** de todas las
+`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las
 combinaciones y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los
 parámetros que realmente varían (los que quedaron fijos no aparecen en el nombre). Antes de escribir nada muestra un
 resumen de los YAMLs a generar y pide confirmación. Escribir `Q` en cualquier prompt cancela la sesión sin generar nada.
 Cada parámetro se valida al ingresarlo (ej. `k` debe ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor
 no es válido, se vuelve a pedir solo ese parámetro.
 
-### 2. Correr las corridas
+### 2. Correr las configuraciones
 
 ```bash
 python experiments/run.py <config_yaml> [<config_yaml2> ...]
@@ -176,11 +180,11 @@ ventana.
 python experiments/figures.py <plot_smoothing> results/e0/e0_*.parquet
 ```
 
-Por cada Parquet genera **un** PNG con fondo transparente, mostrando ambas métricas superpuestas en el mismo gráfico y
+Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas en el mismo gráfico y
 con el mismo color aleatorio por corrida:
 
-- **Línea continua** — tasa global de cooperación ($C_t$)
-- **Línea punteada** — índice de Gini de ventana (desigualdad reciente de recompensas)
+- **Línea continua** — tasa global de cooperación $C_t$
+- **Línea punteada** — índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
 
 Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento, no vive en el YAML) es el tamaño de la
 media móvil aplicada solo al graficar, sin afectar los datos guardados.
@@ -189,48 +193,69 @@ media móvil aplicada solo al graficar, sin afectar los datos guardados.
 
 ## Métricas de Evaluación
 
-El análisis se basa en dos series temporales, registradas ronda a ronda sin suavizar (el suavizado solo se aplica al
+El análisis se basa en dos series temporales registradas ronda a ronda sin suavizar (el suavizado solo se aplica al
 graficar, ver `plot_smoothing` arriba):
 
-- **Tasa global de cooperación $C_t$**: proporción de agentes cooperadores en cada ronda.
-- **Índice de Gini de ventana $G$**: desigualdad en la distribución de la recompensa acumulada dentro de la ventana
-  reciente de `sample_every` rondas (no es un Gini histórico acumulado desde el inicio de la simulación, sino uno que
-  se reinicia en cada punto de muestreo — mide desigualdad reciente/local).
+**Tasa global de cooperación $C_t$**: proporción de agentes cooperadores en cada ronda.
+
+**Promedio de recompensas por agente**: utilizada para calcular $G$.
+
+**Índice de Gini de ventana $G$**: desigualdad en la distribución de la recompensa acumulada dentro de la ventana
+reciente de `sample_every` rondas.
+
+~~Estabilidad temporal (volatilidad)~~
+
+~~Tiempo hasta estabilización~~
 
 ---
 
 ## Hipótesis
 
-### Hipótesis Fundamentales
+### Hipótesis Principales
 
 **H1. Efecto de la estructura:** la topología de la red afecta significativamente el nivel final de cooperación. ¿La
 forma en que los agentes están conectados influye en su capacidad para cooperar?
 
 **H2. Efecto del aprendizaje:** una tasa de aprendizaje moderada ($0.05 < \alpha < 0.3$) permite mayor estabilidad que
-valores extremos. ¿La convergencia hacia el equilibrio puede verse favorecida por la tasa de aprendizaje?
+valores extremos. ¿La convergencia hacia el equilibrio se ve afectada por la tasa de aprendizaje?
 
-**H3. Exploración controlada:** valores intermedios de $\varepsilon$ (entre 0.05 y 0.2) favorecen el equilibrio entre
-exploración y cooperación sostenida. ¿Cómo impacta el tiempo destinado a explorar en la cooperación a largo plazo?
+**H3. Efecto de la exploración:** valores intermedios de exploración ($0.05 < \varepsilon < 0.3$) favorecen el
+hallazgo de entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
 
 ### Hipótesis Alternativas
 
-**HA1.** La desigualdad en la distribución de recompensas depende de la topología de la red y del grado medio de
-conectividad.
+~~**HA1.** La presencia de agentes aleatorios puede prevenir el colapso total de la cooperación.~~
 
-**HA2.** La inclusión de información de vecinos de mayor orden ($\rho > 1$) puede fortalecer la cooperación.
+**HA2.** La inclusión de información extendida (vecinos de segundo o mayor orden $\rho > 1$) puede fortalecer la
+cooperación.
 
+**HA3.** La desigualdad de recompensas aumenta con el grado medio de conectividad de la red $k$.
 
 ---
 
-## Notas
+## Cambios al anteproyecto
 
-> En versiones previas de este documento aparecían formulaciones distintas para HA1/HA3 (agentes aleatorios que
-> previenen el colapso de cooperación; Gini vs. grado de conectividad como hipótesis separada).
-> Las hipótesis alternativas se han unificado y simplificado para reflejar mejor la intención original del proyecto, que
-> es explorar la interacción entre agentes Q-Learning.
+### Métricas
 
-> Se agrega a la bibliografía el libro de Brunton & Kutz (2019) como referencia para la parte de RL (capítulo 11:
-> Reinforcement Learning).
+La métrica de estabilidad temporal (volatilidad) se descartó debido a que el interés de visualizar un gráfico y detectar
+visualmente la medida resultaba ser de mayor interés que un simple número.
+
+La métrica de tiempo hasta estabilización se descartó debido a que esta asumía un comportamiento convergente y a su vez
+hacía uso de la métrica de estabilidad temporal, que ya se había descartado.
+
+### Hipótesis alternativa HA1
+
+La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la
+inclusión de tales agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo.
+Por lo tanto, la hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
+
+### Bibliografía utilizada
+
+Se agrega a la bibliografía el libro de Brunton & Kutz (2019) como referencia para RL (capítulo 11:
+Reinforcement Learning).
+
+Se descarta el uso de la referencia de Shoham et al. (2007).
+
 
 ---
 
@@ -245,7 +270,7 @@ conectividad.
 
 **Papers**
 
-- Shoham, Y. et al. (2007). *If multi-agent learning is the answer, what is the question?*.
+~~- Shoham, Y. et al. (2007). *If multi-agent learning is the answer, what is the question?*.~~
 
 **Videos**
 
@@ -260,5 +285,3 @@ conectividad.
 - `/archive/anteproyecto.md` — definición inicial del proyecto, hipótesis y plan de trabajo
 
 ---
-
-```
