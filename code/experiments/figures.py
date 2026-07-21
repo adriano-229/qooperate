@@ -59,7 +59,7 @@ def _plot_single(
         rounds,
         moving_average(cooperation, smoothing),
         color=color,
-        linewidth=2,
+        linewidth=1,
         label="C_t",
     )
 
@@ -67,7 +67,7 @@ def _plot_single(
         rounds,
         moving_average(gini, smoothing),
         color=color,
-        linewidth=2,
+        linewidth=1,
         linestyle="--",
         label="Gini",
     )
