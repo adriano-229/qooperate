@@ -14,16 +14,6 @@ agentes Q-Learning que juegan un Dilema del Prisionero Iterado con sus vecinos.
 
 ---
 
-## Instalación
-
-Para instalar el paquete con las dependencias necesarias hay que colocarse en la carpeta `/code` y ejecutar:
-
-```bash
-pip install -e .
-```
-
----
-
 ## Objetivo
 
 El proyecto busca explorar el surgimiento o colapso de la cooperación en sociedades artificiales dinámicas compuestas
@@ -48,9 +38,8 @@ $$Q(s,a) \leftarrow Q(s,a) + \alpha \big(r + \gamma \max_{a'} Q(s',a') - Q(s,a)\
 donde $\alpha$ es la tasa de aprendizaje, $\gamma$ el factor de descuento, $r$ la recompensa inmediata y $(s, a)$ el par
 estado-acción.
 
-En un entorno multiagente como el presente, cada individuo percibe un _entorno no estacionario_, ya que los demás
-también aprenden y
-adaptan su política, generando una dinámica colectiva cambiante. Por tanto, el objetivo no es la convergencia del
+En un entorno multiagente, como el del este proyecto, cada individuo percibe un _entorno no estacionario_, ya que los
+demás también aprenden y adaptan su política. Por tanto, el objetivo no es la convergencia del
 aprendizaje, que bajo esta premisa deja de estar garantizada, sino la observación y el análisis del comportamiento
 adaptativo del sistema.
 
@@ -94,13 +83,12 @@ Las simulaciones se realizan sobre tres tipos de redes.
 El entorno modela una población de $N$ agentes, cada uno de los cuales interactúa con sus vecinos definidos por el
 grafo.
 En cada ronda, cada agente juega un Dilema del Prisionero con sus vecinos, elige su acción $a_t \in \{C, D\}$
-siguiendo una política $\varepsilon$-greedy y actualiza su tabla $Q$ con base en la recompensa media obtenida en esa
-ronda.
+siguiendo una política $\varepsilon$-greedy.
 
 Es importante destacar que no existe una fase de entrenamiento separada; los agentes aprenden y aplican la política
 aprendida simultáneamente durante toda la simulación.
 
-El **estado local** $s$ está definido por un conjunto reducido de variables:
+El **estado local** $s$ está definido por el conjunto de variables:
 
 - Acción mayoritaria observada en el vecindario en la ronda anterior
 - Última acción propia
@@ -110,8 +98,8 @@ El **estado local** $s$ está definido por un conjunto reducido de variables:
 Estas variables se discretizan para mantener un espacio de estados manejable.
 
 El vecindario de juego (con quién interactúa y cobra recompensa cada agente, y sobre quién se calculan las dos variables
-de estado anteriores) puede extenderse más allá de los vecinos directos mediante el parámetro `ρ`: `ρ=1` es el
-vecindario directo de la red; `ρ>1` incluye también vecinos a distancia 2, 3, ... (vía BFS sobre el grafo).
+de estado anteriores) puede extenderse más allá de los vecinos inmediatos mediante el parámetro `ρ`: `ρ=1` es el
+vecindario directo del agente; `ρ=2` incluye también vecinos a distancia 2 y así sucesivamente (vía BFS sobre el grafo).
 
 ---
 
@@ -129,7 +117,7 @@ Cada archivo YAML en `config/` describe una única corrida y por lo tanto una ú
 | `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | `0.1`             | > 0                                                   |
 | `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | `0.1`             | > 0                                                   |
 | `gamma`              | Factor de descuento en Q-Learning                                                                                     | `0.9`             | > 0                                                   |
-| `rho`                | Profundidad del vecindario de juego                                                                                   | `1`               | ≥ 1                                                   |
+| `rho`                | Profundidad del vecindario                                                                                            | `1`               | ≥ 1                                                   |
 | `seed`               | Semilla para reproducibilidad                                                                                         | `0`               | ≥ 0                                                   |
 | `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | `2000`            | > 0                                                   |
 | `reward_window`      | Ventana de recompensa reciente usada en el estado                                                                     | `10`              | ≥ 1                                                   |
@@ -142,7 +130,18 @@ Cada archivo YAML en `config/` describe una única corrida y por lo tanto una ú
 
 ## Uso
 
-### 1. Generar YAMLs interactivamente
+### 1. Instalación
+
+Para instalar el paquete con las dependencias necesarias hay que colocarse en la carpeta `/code` y ejecutar:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
+```
+
+### 2. Generar YAMLs interactivamente
 
 ```bash
 python experiments/generate_yamls.py
@@ -153,12 +152,12 @@ paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se pued
 separados por espacio (ej.
 `alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las
 combinaciones y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los
-parámetros que realmente varían (los que quedaron fijos no aparecen en el nombre). Antes de escribir nada muestra un
+parámetros que realmente varían (los que quedaron fijos no aparecen en el nombre), muestra un
 resumen de los YAMLs a generar y pide confirmación. Escribir `Q` en cualquier prompt cancela la sesión sin generar nada.
 Cada parámetro se valida al ingresarlo (ej. `k` debe ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor
 no es válido, se vuelve a pedir solo ese parámetro.
 
-### 2. Correr las configuraciones
+### 3. Correr las configuraciones
 
 ```bash
 python experiments/run.py <config_yaml> [<config_yaml2> ...]
@@ -174,7 +173,7 @@ Cada YAML se corre de forma independiente; guarda su Parquet en `results/<prefij
 evolución temporal completa (muestreada según `sample_every`) de tasa de cooperación, recompensa media y Gini de
 ventana.
 
-### 3. Generar figuras
+### 4. Generar figuras
 
 ```bash
 python experiments/figures.py <plot_smoothing> results/e0/e0_*.parquet
@@ -183,22 +182,19 @@ python experiments/figures.py <plot_smoothing> results/e0/e0_*.parquet
 Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas en el mismo gráfico y
 con el mismo color aleatorio por corrida:
 
-- **Línea continua** — tasa global de cooperación $C_t$
-- **Línea punteada** — índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
+- Línea continua — tasa global de cooperación $C_t$
+- Línea punteada — índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
 
-Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento, no vive en el YAML) es el tamaño de la
-media móvil aplicada solo al graficar, sin afectar los datos guardados.
+Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
+media móvil aplicada al graficar.
 
 ---
 
 ## Métricas de Evaluación
 
-El análisis se basa en dos series temporales registradas ronda a ronda sin suavizar (el suavizado solo se aplica al
-graficar, ver `plot_smoothing` arriba):
+**Tasa global de cooperación $C_t$**: proporción de agentes cooperadores, muestreadas cada `sample_every` rondas.
 
-**Tasa global de cooperación $C_t$**: proporción de agentes cooperadores en cada ronda.
-
-**Promedio de recompensas por agente**: utilizada para calcular $G$.
+**Promedio de recompensas por agente**: se guarda y acumula para calcular $G$.
 
 **Índice de Gini de ventana $G$**: desigualdad en la distribución de la recompensa acumulada dentro de la ventana
 reciente de `sample_every` rondas.
@@ -229,7 +225,7 @@ hallazgo de entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinad
 **HA2.** La inclusión de información extendida (vecinos de segundo o mayor orden $\rho > 1$) puede fortalecer la
 cooperación.
 
-**HA3.** La desigualdad de recompensas aumenta con el grado medio de conectividad de la red $k$.
+**HA3.** La desigualdad de recompensas aumenta con el grado medio de conectividad de la red, $k$.
 
 ---
 
@@ -238,10 +234,10 @@ cooperación.
 ### Métricas
 
 La métrica de estabilidad temporal (volatilidad) se descartó debido a que el interés de visualizar un gráfico y detectar
-visualmente la medida resultaba ser de mayor interés que un simple número.
+visualmente la medida resultaba ser de mayor interés que simplemente el número.
 
 La métrica de tiempo hasta estabilización se descartó debido a que esta asumía un comportamiento convergente y a su vez
-hacía uso de la métrica de estabilidad temporal, que ya se había descartado.
+hacía uso de la métrica de estabilidad temporal, también descartada.
 
 ### Hipótesis alternativa HA1
 
@@ -282,6 +278,6 @@ Se descarta el uso de la referencia de Shoham et al. (2007).
 
 **Recursos en el repositorio**
 
-- `/archive/anteproyecto.md` — definición inicial del proyecto, hipótesis y plan de trabajo
+- `/archive/anteproyecto.md` — definición inicial del proyecto.
 
 ---
