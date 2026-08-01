@@ -5,7 +5,7 @@ alpha: 0.1
 epsilon: 0.1
 gamma: 0.9
 rho: 2
-seed: 44555555
+seed: 1
 n_rounds: 12000
 reward_window: 10
 sample_every: 10

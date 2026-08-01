@@ -1,6 +1,6 @@
 topology: watts_strogatz
 n_agents: 100
-k: 8
+k: 12
 alpha: 0.1
 epsilon: 0.1
 gamma: 0.9

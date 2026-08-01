@@ -33,28 +33,24 @@ El trabajo se apoya en dos ejes conceptuales: el Reinforcement Learning (RL) y l
 
 Los agenten aplican el algoritmo de **Q-Learning**, cuya regla de actualización se expresa como:
 
-$$Q(s,a) \leftarrow Q(s,a) + \alpha \big(r + \gamma \max_{a'} Q(s',a') - Q(s,a)\big)$$
+$$Q (s,a) \leftarrow Q (s,a) + \alpha \big (r + \gamma \max_{a'} Q (s',a') - Q (s,a)\big)$$
 
 donde $\alpha$ es la tasa de aprendizaje, $\gamma$ el factor de descuento, $r$ la recompensa inmediata y $(s, a)$ el par
 estado-acción.
 
 En un entorno multiagente, como el del este proyecto, cada individuo percibe un _entorno no estacionario_, ya que los
-demás también aprenden y adaptan su política. Por tanto, el objetivo no es la convergencia del
-aprendizaje, que bajo esta premisa deja de estar garantizada, sino la observación y el análisis del comportamiento
-adaptativo del sistema.
+demás también aprenden y adaptan su política. Por tanto, el objetivo no es la convergencia del aprendizaje, que bajo
+esta premisa deja de estar garantizada, sino la observación y el análisis del comportamiento adaptativo del sistema.
 
 ### Game Theory
 
-Cada interacción entre agentes se modela como un **Dilema del Prisionero iterado (IPD)**,
-donde ambos
-agentes eligen una acción entre 2 posibles: cooperar (C) o desertar (D).
+Cada interacción entre agentes se modela como un **Dilema del Prisionero iterado (IPD)**, donde ambos agentes eligen una
+acción entre 2 posibles: cooperar (C) o desertar (D).
 
 El Dilema del Prisionero es un juego de suma no nula, donde la cooperación mutua genera un beneficio conjunto mayor que
-la deserción
-mutua, si bien la acción de desertar frente a un cooperador resulta ser la mejor opción desde el punto de vista
-individual y cortoplacista.
-La iteración surge de la repetición de este juego entre distintos pares de agentes situados en un grafo, permitiendo que
-se desarrollen estrategias basadas en la historia de interacciones previas.
+la deserción mutua, si bien la acción de desertar frente a un cooperador resulta ser la mejor opción desde el punto de
+vista individual y cortoplacista. La iteración surge de la repetición de este juego entre distintos pares de agentes
+situados en un grafo, permitiendo que se desarrollen estrategias basadas en la historia de interacciones previas.
 
 La matriz de recompensas utilizada es la canónica de la literatura, y por lo tanto cumple $T > R > P > S$
 y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero.
@@ -81,8 +77,7 @@ Las simulaciones se realizan sobre tres tipos de redes.
 ## Descripción del Framework
 
 El entorno modela una población de $N$ agentes, cada uno de los cuales interactúa con sus vecinos definidos por el
-grafo.
-En cada ronda, cada agente juega un Dilema del Prisionero con sus vecinos, elige su acción $a_t \in \{C, D\}$
+grafo. En cada ronda, cada agente juega un Dilema del Prisionero con sus vecinos, elige su acción $a_t \in \{C, D\}$
 siguiendo una política $\varepsilon$-greedy.
 
 Es importante destacar que no existe una fase de entrenamiento separada; los agentes aprenden y aplican la política
@@ -150,12 +145,12 @@ python experiments/generate_yamls.py
 Pide un nombre de experimento y luego cada parámetro de la tabla anterior, uno por uno, con su valor por defecto entre
 paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se puede pasar más de un valor por parámetro,
 separados por espacio (ej.
-`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las
-combinaciones y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los
-parámetros que realmente varían (los que quedaron fijos no aparecen en el nombre), muestra un
-resumen de los YAMLs a generar y pide confirmación. Escribir `Q` en cualquier prompt cancela la sesión sin generar nada.
-Cada parámetro se valida al ingresarlo (ej. `k` debe ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor
-no es válido, se vuelve a pedir solo ese parámetro.
+`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las combinaciones
+y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los parámetros que
+realmente varían (los que quedaron fijos no aparecen en el nombre), muestra un resumen de los YAMLs a generar y pide
+confirmación. Escribir `Q` en cualquier prompt cancela la sesión sin generar nada. Cada parámetro se valida al
+ingresarlo (ej. `k` debe ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor no es válido, se vuelve a
+pedir solo ese parámetro.
 
 ### 3. Correr las configuraciones
 
@@ -176,11 +171,10 @@ ventana.
 ### 4. Generar figuras
 
 ```bash
-python experiments/figures.py <plot_smoothing> results/e0/e0_*.parquet
+python experiments/figures.py <plot_smoothing> <e0_1.parquet> [<e0_2.parquet> ...]
 ```
 
-Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas en el mismo gráfico y
-con el mismo color aleatorio por corrida:
+Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas.
 
 - Línea continua — tasa global de cooperación $C_t$
 - Línea punteada — índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
@@ -212,11 +206,11 @@ reciente de `sample_every` rondas.
 **H1. Efecto de la estructura:** la topología de la red afecta significativamente el nivel final de cooperación. ¿La
 forma en que los agentes están conectados influye en su capacidad para cooperar?
 
-**H2. Efecto del aprendizaje:** una tasa de aprendizaje moderada ($0.05 < \alpha < 0.3$) permite mayor estabilidad que
+**H2. Efecto del aprendizaje:** una tasa de aprendizaje moderada ($0.05 < \alpha < 0.5$) permite mayor estabilidad que
 valores extremos. ¿La convergencia hacia el equilibrio se ve afectada por la tasa de aprendizaje?
 
-**H3. Efecto de la exploración:** valores intermedios de exploración ($0.05 < \varepsilon < 0.3$) favorecen el
-hallazgo de entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
+**H3. Efecto de la exploración:** valores intermedios de exploración ($0.05 < \varepsilon < 0.5$) favorecen el hallazgo
+de entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
 
 ### Hipótesis Alternativas
 
@@ -241,9 +235,9 @@ hacía uso de la métrica de estabilidad temporal, también descartada.
 
 ### Hipótesis alternativa HA1
 
-La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la
-inclusión de tales agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo.
-Por lo tanto, la hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
+La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la inclusión de tales
+agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo. Por lo tanto, la
+hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
 
 ### Bibliografía utilizada
 
@@ -256,7 +250,8 @@ Se descarta el uso de la referencia de Shoham et al. (2007).
 ---
 
 ## Referencias
-
+ en el mismo gráfico y
+con el mismo color aleatorio por corrida:
 **Libros**
 
 - Russell, S. & Norvig, P. (2021). *Artificial Intelligence: A Modern Approach* (4ª ed.).

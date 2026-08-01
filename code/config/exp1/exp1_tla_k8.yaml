@@ -1,4 +1,4 @@
-topology: watts_strogatz
+topology: lattice
 n_agents: 100
 k: 8
 alpha: 0.1

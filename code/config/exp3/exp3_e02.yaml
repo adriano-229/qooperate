@@ -2,7 +2,7 @@ topology: watts_strogatz
 n_agents: 100
 k: 8
 alpha: 0.1
-epsilon: 0.1
+epsilon: 0.2
 gamma: 0.9
 rho: 1
 seed: 1

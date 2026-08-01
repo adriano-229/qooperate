@@ -4,7 +4,7 @@ k: 8
 alpha: 0.1
 epsilon: 0.1
 gamma: 0.9
-rho: 1
+rho: 5
 seed: 1
 n_rounds: 12000
 reward_window: 10
