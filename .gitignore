@@ -11,3 +11,6 @@ code/experiments/overlay.py
 /code/results/expz/expz_base.parquet
 /code/results/figures/expz/expz_base.png
 /code/results/test/test_base.parquet
+/AGENTS.md
+/code/results/figures/qooperate/qooperate_quicktest.png
+/code/results/figures/qooperate/qooperate_quicktest_learning.png
