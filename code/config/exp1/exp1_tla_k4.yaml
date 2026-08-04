@@ -1,4 +1,5 @@
 topology: lattice
+state_representation: S1234
 n_agents: 100
 k: 4
 alpha: 0.1

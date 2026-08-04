@@ -108,6 +108,7 @@ parámetros.
 | `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
 | `n_agents`           | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
 | `topology`           | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
+| `state_representation` | Representación del estado: `S1`, `S12`, `S123` o `S1234`                                                            | —                                                     |
 | `k`                  | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
 | `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
 | `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
@@ -184,6 +185,24 @@ Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas
 
 Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
 media móvil aplicada al graficar.
+
+### 5. Figuras de aprendizaje
+
+```bash
+python experiments/learning_figures.py <parquet1> [<parquet2> ...]
+```
+
+Genera una figura por corrida con dos heatmaps:
+
+- ΔQ(s) = Q(s, C) - Q(s, D)
+- Frecuencia de visita acumulada por estado
+
+Por defecto las etiquetas del eje X se muestran en formato compacto, por ejemplo `(C,D,2,1)`. Para etiquetas más
+explícitas se puede usar:
+
+```bash
+python experiments/learning_figures.py --label-style verbose results/exp4/exp4_s1234.parquet
+```
 
 ---
 

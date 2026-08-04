@@ -40,7 +40,7 @@ FIGURES_DIR = Path(__file__).resolve().parents[1] / "results" / "figures"
 
 FIG_SIZE = (8, 5)  # pulgadas
 DPI = 150
-AXES_RECT = [0.12, 0.12, 0.83, 0.83]  # [left, bottom, width, height] en fracción de figura, fijo
+AXES_RECT: tuple[float, float, float, float] = (0.12, 0.12, 0.83, 0.83)  # [left, bottom, width, height] fijo
 
 # Columnas que identifican configuración de una corrida (no series de
 # datos); se usan para detectar cuál varía entre los parquets pasados.
@@ -64,7 +64,7 @@ def _detect_varying_params(dfs: list[pd.DataFrame]) -> list[str]:
         if col not in dfs[0].columns:
             continue
 
-        values = {df[col].iloc[0] for df in dfs}
+        values = {df[col].to_numpy()[0] for df in dfs}
         if len(values) > 1:
             varying.append(col)
 
@@ -90,16 +90,20 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
     ax = fig.add_axes(AXES_RECT)
     ax.patch.set_alpha(0.0)
 
-    max_round = 0
+    min_round = None
+    max_round = None
     n = len(dfs)
     for i, (path, df) in enumerate(zip(parquet_paths, dfs)):
         color = _color_for_index(i, n)
-        rounds = df["round"]
-        max_round = max(max_round, rounds.max())
+        rounds = df["round"].to_numpy()
+        round_min = int(rounds.min())
+        round_max = int(rounds.max())
+        min_round = round_min if min_round is None else min(min_round, round_min)
+        max_round = round_max if max_round is None else max(max_round, round_max)
 
         if varying_params:
             label = ", ".join(
-                f"{param}={df[param].iloc[0]}"
+                f"{param}={df[param].iat[0]}"
                 for param in varying_params
             )
         else:
@@ -114,7 +118,7 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
             color=color, linewidth=1, linestyle="--",
         )
 
-    ax.set_xlim(0, max_round)
+    ax.set_xlim(min_round, max_round)
     ax.set_ylim(0, 1)
     ax.set_xlabel("Ronda")
     ax.set_ylabel("Valor")
