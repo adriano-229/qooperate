@@ -1,7 +1,7 @@
 # QOOPERATE
 
-**Multi-Agent / Public Goods Prisoner's Dilemma** — estudio del surgimiento o colapso de la cooperación en redes de
-agentes Q-Learning que juegan un Dilema del Prisionero Iterado con sus vecinos.
+Estudio del surgimiento o colapso de la cooperación en redes de agentes Q-Learning que juegan un Dilema del Prisionero
+Iterado con sus vecinos.
 
 **Código:** `QOOPERATE`
 
@@ -20,9 +20,6 @@ El proyecto busca explorar el surgimiento o colapso de la cooperación en socied
 por agentes racionales que aprenden mediante refuerzo, evaluando cómo la estructura social (topología de red) y la
 utilización de la información local influyen en el comportamiento colectivo.
 
-La meta principal es observar bajo qué condiciones emergen patrones estables de cooperación o, si no es posible, por
-qué.
-
 ---
 
 ## Teoría Involucrada
@@ -38,7 +35,7 @@ $$Q (s,a) \leftarrow Q (s,a) + \alpha \big (r + \gamma \max_{a'} Q (s',a') - Q (
 donde $\alpha$ es la tasa de aprendizaje, $\gamma$ el factor de descuento, $r$ la recompensa inmediata y $(s, a)$ el par
 estado-acción.
 
-En un entorno multiagente, como el del este proyecto, cada individuo percibe un _entorno no estacionario_, ya que los
+En un entorno multiagente como el del este proyecto, cada individuo percibe un _entorno no estacionario_, ya que los
 demás también aprenden y adaptan su política. Por tanto, el objetivo no es la convergencia del aprendizaje, que bajo
 esta premisa deja de estar garantizada, sino la observación y el análisis del comportamiento adaptativo del sistema.
 
@@ -47,10 +44,10 @@ esta premisa deja de estar garantizada, sino la observación y el análisis del 
 Cada interacción entre agentes se modela como un **Dilema del Prisionero iterado (IPD)**, donde ambos agentes eligen una
 acción entre 2 posibles: cooperar (C) o desertar (D).
 
-El Dilema del Prisionero es un juego de suma no nula, donde la cooperación mutua genera un beneficio conjunto mayor que
-la deserción mutua, si bien la acción de desertar frente a un cooperador resulta ser la mejor opción desde el punto de
+El Dilema del Prisionero es un juego de suma no nula donde la cooperación mutua genera un beneficio conjunto mayor que
+la deserción mutua aún cuando la acción de desertar frente a un cooperador resulta ser la mejor opción desde el punto de
 vista individual y cortoplacista. La iteración surge de la repetición de este juego entre distintos pares de agentes
-situados en un grafo, permitiendo que se desarrollen estrategias basadas en la historia de interacciones previas.
+situados en un grafo.
 
 La matriz de recompensas utilizada es la canónica de la literatura, y por lo tanto cumple $T > R > P > S$
 y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero.
@@ -83,12 +80,13 @@ siguiendo una política $\varepsilon$-greedy.
 Es importante destacar que no existe una fase de entrenamiento separada; los agentes aprenden y aplican la política
 aprendida simultáneamente durante toda la simulación.
 
-El **estado local** $s$ está definido por el conjunto de variables:
+El estado $s$ de cada agente está definido por el conjunto de variables:
 
-- Acción mayoritaria observada en el vecindario en la ronda anterior
-- Última acción propia
-- Tasa de cooperación del vecindario en la ronda anterior
-- Recompensa media propia reciente (reciente = promedio de recompensas obtenidas en las últimas `reward_window` rondas)
+- s1: Acción mayoritaria observada en el vecindario en la ronda anterior
+- s2: Última acción propia
+- s3: Tasa de cooperación del vecindario en la ronda anterior
+- s4: Recompensa media propia reciente (reciente = promedio de recompensas obtenidas en las últimas `reward_window`
+  rondas)
 
 Estas variables se discretizan para mantener un espacio de estados manejable.
 
@@ -100,16 +98,17 @@ vecindario directo del agente; `ρ=2` incluye también vecinos a distancia 2 y a
 
 ## Diseño
 
-Cada archivo YAML en `config/` describe una única corrida y por lo tanto una única combinación de valores de parámetros.
+Cada archivo YAML en `config/` describe una única corrida y, por lo tanto, una única combinación de valores de
+parámetros.
 
 ### Parámetros configurables
 
 | Parámetro            | Descripción                                                                                                           | Restricciones                                         |
 |----------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
 | `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
-| `n_agents`           | Cantidad de agentes ($N$)                                                                                             | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
+| `n_agents`           | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
 | `topology`           | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
-| `k`                  | Grado de conectividad de la red                                                                                       | debe ser `4`, `8` o `12`                              |
+| `k`                  | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
 | `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
 | `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
 | `rho`                | Profundidad del vecindario                                                                                            | ≥ 1                                                   |
@@ -119,7 +118,7 @@ Cada archivo YAML en `config/` describe una única corrida y por lo tanto una ú
 | `coop_n_divisions`   | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
 | `reward_n_divisions` | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
 | `ws_beta`            | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
-| `seed`               | Semilla para reproducibilidad                                                                                         | ≥ 0                                                   |
+| `n_seeds`            | Cantidad de semillas para reproducibilidad                                                                            | ≥ 0                                                   |
 
 ---
 
@@ -136,7 +135,7 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-### 2. Generar YAMLs interactivamente
+### 2. Generar los YAMLs interactivamente
 
 ```bash
 python experiments/generate_yamls.py
@@ -147,10 +146,8 @@ paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se pued
 separados por espacio (ej.
 `alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las combinaciones
 y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los parámetros que
-realmente varían (los que quedaron fijos no aparecen en el nombre), muestra un resumen de los YAMLs a generar y pide
-confirmación. Escribir `Q` en cualquier prompt cancela la sesión sin generar nada. Cada parámetro se valida al
-ingresarlo (ej. `k` debe ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor no es válido, se vuelve a
-pedir solo ese parámetro.
+realmente varían (los que quedaron fijos no aparecen en el nombre). Cada parámetro se valida al ingresarlo (ej. `k` debe
+ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor no es válido, se vuelve a pedir solo ese parámetro.
 
 ### 3. Correr las configuraciones
 
@@ -174,10 +171,16 @@ ventana.
 python experiments/figures.py <plot_smoothing> <e0_1.parquet> [<e0_2.parquet> ...]
 ```
 
-Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas.
+Ejemplo
 
-- Línea continua — tasa global de cooperación $C_t$
-- Línea punteada — índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
+```bash
+python experiments/figures.py 10 results/e0/e0_s0.parquet results/e0/e0_s1.parquet
+```
+
+Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas, en las que:
+
+- Línea continua — denota la tasa global de cooperación $C_t$
+- Línea punteada — denota el índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
 
 Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
 media móvil aplicada al graficar.
@@ -186,16 +189,12 @@ media móvil aplicada al graficar.
 
 ## Métricas de Evaluación
 
-**Tasa global de cooperación $C_t$**: proporción de agentes cooperadores, muestreadas cada `sample_every` rondas.
-
-**Promedio de recompensas por agente**: se guarda y acumula para calcular $G$.
-
-**Índice de Gini de ventana $G$**: desigualdad en la distribución de la recompensa acumulada dentro de la ventana
-reciente de `sample_every` rondas.
-
-~~Estabilidad temporal (volatilidad)~~
-
-~~Tiempo hasta estabilización~~
+* Tasa global de cooperación $C_t$: proporción de agentes cooperadores, muestreadas cada `sample_every` rondas.
+* Promedio de recompensas por agente: se guarda y acumula para calcular $G$.
+* Índice de Gini de ventana $G$: desigualdad en la distribución de la recompensa acumulada dentro de la ventana reciente
+  de `sample_every` rondas.
+* ~~Estabilidad temporal (volatilidad)~
+* ~~Tiempo hasta estabilización~~
 
 ---
 
@@ -206,11 +205,11 @@ reciente de `sample_every` rondas.
 **H1. Efecto de la estructura:** la topología de la red afecta significativamente el nivel final de cooperación. ¿La
 forma en que los agentes están conectados influye en su capacidad para cooperar?
 
-**H2. Efecto del aprendizaje:** una tasa de aprendizaje moderada ($0.05 < \alpha < 0.5$) permite mayor estabilidad que
-valores extremos. ¿La convergencia hacia el equilibrio se ve afectada por la tasa de aprendizaje?
+**H2. Efecto del aprendizaje:** la tasa de aprendizaje interfiere en el camino hacia un equilibrio (de haber uno). ¿Cómo
+impacta la velocidad de aprendizaje en el largo plazo?
 
-**H3. Efecto de la exploración:** valores intermedios de exploración ($0.05 < \varepsilon < 0.5$) favorecen el hallazgo
-de entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
+**H3. Efecto de la exploración:** ciertos valores de exploración altos ($\varepsilon > 0.1$) favorecen el hallazgo de
+entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
 
 ### Hipótesis Alternativas
 
@@ -233,13 +232,17 @@ visualmente la medida resultaba ser de mayor interés que simplemente el número
 La métrica de tiempo hasta estabilización se descartó debido a que esta asumía un comportamiento convergente y a su vez
 hacía uso de la métrica de estabilidad temporal, también descartada.
 
+### Hipótesis H2 y H3
+
+Se reescribieron por claridad y para que sean más fácilmente evaluables.
+
 ### Hipótesis alternativa HA1
 
 La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la inclusión de tales
 agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo. Por lo tanto, la
 hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
 
-### Bibliografía utilizada
+### Cambio en la bibliografía
 
 Se agrega a la bibliografía el libro de Brunton & Kutz (2019) como referencia para RL (capítulo 11:
 Reinforcement Learning).
@@ -250,8 +253,7 @@ Se descarta el uso de la referencia de Shoham et al. (2007).
 ---
 
 ## Referencias
- en el mismo gráfico y
-con el mismo color aleatorio por corrida:
+
 **Libros**
 
 - Russell, S. & Norvig, P. (2021). *Artificial Intelligence: A Modern Approach* (4ª ed.).
