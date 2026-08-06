@@ -96,7 +96,7 @@ def run_one(yaml_path: Path) -> Path:
     df.to_parquet(out_path, index=False)
 
     np.savez_compressed(
-        out_dir / f"{yaml_path.stem}_learning.npz",
+        out_dir / f"learning_{yaml_path.stem}.npz",
         delta_q=result.delta_q,
         state_visits=result.state_visits,
         rounds=result.rounds,

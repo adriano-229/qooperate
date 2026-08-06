@@ -103,23 +103,23 @@ parámetros.
 
 ### Parámetros configurables
 
-| Parámetro            | Descripción                                                                                                           | Restricciones                                         |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
-| `n_agents`           | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
-| `topology`           | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
-| `state_representation` | Representación del estado: `S1`, `S12`, `S123` o `S1234`                                                            | —                                                     |
-| `k`                  | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
-| `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
-| `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
-| `rho`                | Profundidad del vecindario                                                                                            | ≥ 1                                                   |
-| `gamma`              | Factor de descuento en Q-Learning                                                                                     | > 0                                                   |
-| `reward_window`      | Ventana de recompensa reciente usada en el estado                                                                     | ≥ 1                                                   |
-| `sample_every`       | Cada cuántas rondas se guarda un punto en el resultado (granularidad del muestreo; no afecta el aprendizaje)          | ≥ 1                                                   |
-| `coop_n_divisions`   | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
-| `reward_n_divisions` | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
-| `ws_beta`            | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
-| `n_seeds`            | Cantidad de semillas para reproducibilidad                                                                            | ≥ 0                                                   |
+| Parámetro              | Descripción                                                                                                           | Restricciones                                         |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| `n_rounds`             | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
+| `n_agents`             | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
+| `topology`             | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
+| `state_representation` | Representación del estado: `S1`, `S12`, `S123` o `S1234`                                                              | —                                                     |
+| `k`                    | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
+| `alpha`                | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
+| `epsilon`              | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
+| `rho`                  | Profundidad del vecindario                                                                                            | ≥ 1                                                   |
+| `gamma`                | Factor de descuento en Q-Learning                                                                                     | > 0                                                   |
+| `reward_window`        | Ventana de recompensa reciente usada en el estado                                                                     | ≥ 1                                                   |
+| `sample_every`         | Cada cuántas rondas se guarda un punto en el resultado (granularidad del muestreo; no afecta el aprendizaje)          | ≥ 1                                                   |
+| `coop_n_divisions`     | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
+| `reward_n_divisions`   | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
+| `ws_beta`              | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
+| `n_seeds`              | Cantidad de semillas para reproducibilidad                                                                            | ≥ 0                                                   |
 
 ---
 
@@ -197,12 +197,7 @@ Genera una figura por corrida con dos heatmaps:
 - ΔQ(s) = Q(s, C) - Q(s, D)
 - Frecuencia de visita acumulada por estado
 
-Por defecto las etiquetas del eje X se muestran en formato compacto, por ejemplo `(C,D,2,1)`. Para etiquetas más
-explícitas se puede usar:
-
-```bash
-python experiments/learning_figures.py --label-style verbose results/exp4/exp4_s1234.parquet
-```
+Las etiquetas del eje X se muestran en formato compacto, por ejemplo `(C,D,2,1)`.
 
 ---
 
