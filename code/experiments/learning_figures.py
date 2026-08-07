@@ -43,8 +43,7 @@ def build_state_labels(representation: StateRepresentation, n_s3: int, n_s4: int
     for idx in range(compute_n_states(representation, n_s3, n_s4)):
         s1, s2, s3, s4 = decode_state(idx, representation, n_s3, n_s4)
         values = [s1, s2, s3, s4][: representation.value]
-        parts = [
-            ("C" if v == 0 else "D") if i < 2 else str(v)
+        parts = [str(v)
             for i, v in enumerate(values)
         ]
         labels.append("(" + ",".join(parts) + ")")
@@ -99,7 +98,7 @@ def make_figure(parquet_path: Path) -> Path:
         )
 
     state_labels = build_state_labels(state_representation, n_s3, n_s4)
-    x_ticks = _sparse_ticks(n_states, max_ticks=12)
+    x_ticks = _sparse_ticks(n_states, max_ticks=n_states)
     y_ticks, y_tick_labels = _format_round_ticks(rounds, max_ticks=12)
 
     fig = plt.figure(figsize=FIG_SIZE)
