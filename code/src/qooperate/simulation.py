@@ -29,6 +29,9 @@ class SimulationResult:
 
     delta_q: np.ndarray
     state_visits: np.ndarray
+    actions: np.ndarray = field(repr=False)
+    rewards: np.ndarray = field(repr=False)
+    cumulative_reward_history: np.ndarray = field(repr=False)
 
 
 class Simulation:
@@ -98,6 +101,9 @@ class Simulation:
         checkpoint_delta_q = []
         checkpoint_state_visits = []
 
+        round_actions = []
+        round_rewards = []
+
         last_actions = [a.last_action for a in agents]
 
         for t in tqdm(range(n_rounds), desc="Simulation", leave=False, disable=not show_progress):
@@ -127,6 +133,9 @@ class Simulation:
 
             self.cumulative_reward += rewards
             window_reward += rewards
+
+            round_actions.append(np.asarray(actions, dtype=np.int8))
+            round_rewards.append(rewards.astype(np.float32, copy=True))
 
             for i in range(n):
                 agents[i].last_action = actions[i]
@@ -182,6 +191,10 @@ class Simulation:
 
                 checkpoint_state_visits.append(visits.copy())
 
+        actions_history = np.asarray(round_actions, dtype=np.int8) if round_actions else np.zeros((0, n), dtype=np.int8)
+        rewards_history = np.asarray(round_rewards, dtype=np.float32) if round_rewards else np.zeros((0, n), dtype=np.float32)
+        cumulative_reward_history = np.cumsum(rewards_history, axis=0, dtype=np.float32) if len(rewards_history) else np.zeros((0, n), dtype=np.float32)
+
         return SimulationResult(
             rounds=np.array(checkpoint_rounds, dtype=int),
             cooperation_rate=np.array(checkpoint_coop),
@@ -190,4 +203,7 @@ class Simulation:
             delta_q=np.array(checkpoint_delta_q),
             state_visits=np.array(checkpoint_state_visits),
             final_cumulative_reward=self.cumulative_reward.copy(),
+            actions=actions_history,
+            rewards=rewards_history,
+            cumulative_reward_history=cumulative_reward_history,
         )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -102,6 +103,14 @@ def run_one(yaml_path: Path) -> Path:
         rounds=result.rounds,
     )
 
+    np.savez_compressed(
+        out_dir / f"replay_{yaml_path.stem}.npz",
+        actions=result.actions,
+        rewards=result.rewards,
+        cumulative_reward_history=result.cumulative_reward_history,
+        rounds=np.arange(1, cfg["n_rounds"] + 1, dtype=int),
+    )
+
     return out_path
 
 
@@ -110,10 +119,19 @@ def main() -> None:
         print(__doc__)
         sys.exit(1)
 
+    out_path = None
     for arg in sys.argv[1:]:
         yaml_path = Path(arg)
         out_path = run_one(yaml_path)
         print(f"{yaml_path} -> {out_path}")
+
+    if out_path is not None and len(sys.argv[1:]) == 1 and os.environ.get("QOOPERATE_NO_VIEWER") != "1":
+        try:
+            from viewer import launch_viewer
+
+            launch_viewer(out_path)
+        except Exception as exc:
+            print(f"No se pudo abrir el visor: {exc}")
 
 
 if __name__ == "__main__":

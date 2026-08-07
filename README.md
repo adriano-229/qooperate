@@ -199,6 +199,18 @@ Genera una figura por corrida con dos heatmaps:
 
 Las etiquetas del eje X se muestran en formato compacto, por ejemplo `(C,D,2,1)`.
 
+### 6. Replay interactivo
+
+Luego de correr una única configuración con `experiments/run.py`, el proyecto guarda un archivo adicional `replay_<nombre>.npz` y abre automáticamente el visor interactivo.
+
+También puede abrirse manualmente con:
+
+```bash
+python experiments/viewer.py results/<prefijo>/<nombre>.parquet
+```
+
+El visor reproduce el historial de la simulación sin volver a ejecutar el aprendizaje, y puede desactivarse en la corrida automática con `QOOPERATE_NO_VIEWER=1`.
+
 ---
 
 ## Métricas de Evaluación
