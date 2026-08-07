@@ -14,3 +14,9 @@ code/experiments/overlay.py
 /AGENTS.md
 /code/results/figures/qooperate/qooperate_quicktest.png
 /code/results/figures/qooperate/qooperate_quicktest_learning.png
+/code/config/adri/adri_srS1_seed478163327.yaml
+/code/config/adri/adri_srS123_seed107420369.yaml
+/code/results/adri/adri_srS123_seed107420369.parquet
+/code/results/adri/learning_adri_srS123_seed107420369.npz
+/code/results/figures/adri/adri_srS123_seed107420369.png
+/code/results/figures/adri/adri_srS123_seed107420369_learning.png
