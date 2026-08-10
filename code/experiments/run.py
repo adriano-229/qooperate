@@ -18,7 +18,7 @@ from qooperate.utils import (  # noqa: E402
     parse_state_representation,
 )
 
-RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
+RESULTS_DIR = Path(__file__).resolve().parents[1] / "results" / "data"
 
 
 def run_one(yaml_path: Path) -> Path:

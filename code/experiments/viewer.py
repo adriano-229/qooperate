@@ -7,8 +7,8 @@ from pathlib import Path
 import networkx as nx
 import numpy as np
 import pandas as pd
-from PySide6 import QtCore, QtWidgets
 import pyqtgraph as pg
+from PySide6 import QtCore, QtWidgets
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -53,10 +53,7 @@ def _format_state_label(values: tuple[int, int, int, int], representation: State
     active = values[: representation.value]
     parts = []
     for i, value in enumerate(active):
-        if i < 2:
-            parts.append("C" if value == 0 else "D")
-        else:
-            parts.append(str(value))
+        parts.append(str(value))
     return "(" + ",".join(parts) + ")"
 
 

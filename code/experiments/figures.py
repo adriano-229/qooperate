@@ -1,23 +1,21 @@
 """Genera una figura PNG que superpone la evolución de cooperación (C_t,
 línea sólida) y Gini de ventana (línea punteada) de uno o más parquets,
 un color fijo por parquet (determinístico según el orden en que se
-pasan como argumento), con una única leyenda por parquet que muestra el
-color y el valor del parámetro que varía entre ellos.
+pasan como argumento), con una única leyenda por parquet que muestra
+el color y el valor del parámetro que varía entre ellos.
 
 El parámetro que varía se detecta automáticamente comparando los
 metadatos (columnas constantes por corrida) entre los parquets pasados.
 Si más de un parámetro varía entre ellos, se usa el primero detectado y
-se avisa por consola — probablemente sea un error de selección de
-parquets (se está comparando algo que no debería compararse de una).
+se avisa por consola.
 
 Cada figura usa un tamaño en píxeles y una posición de ejes (Axes)
-FIJOS (sin tight_layout, que recalcula márgenes según el ancho del
-texto), y límites de eje fijos: Y en [0, 1], X en
+FIJOS, sin tight_layout, y límites de eje fijos: Y en [0, 1], X en
 [0, max(round) entre todos los parquets pasados].
 
 Uso:
-    python experiments/figures.py <plot_smoothing> <parquet1> [<parquet2> ...]
-    python experiments/figures.py 20 results/e1/e1_tla_k4.parquet results/e1/e1_tla_k8.parquet results/e1/e1_tla_k12.parquet
+python experiments/figures.py <plot_smoothing> [ ...]
+python experiments/figures.py 20 results/e1/e1_tla_k4.parquet results/e1/e1_tla_k8.parquet results/e1/e1_tla_k12.parquet
 """
 
 from __future__ import annotations
@@ -38,18 +36,29 @@ from qooperate.metrics import moving_average  # noqa: E402
 
 FIGURES_DIR = Path(__file__).resolve().parents[1] / "results" / "figures"
 
-FIG_SIZE = (8, 5)  # pulgadas
+FIG_SIZE = (8, 5)
 DPI = 150
-AXES_RECT: tuple[float, float, float, float] = (0.12, 0.12, 0.83, 0.83)  # [left, bottom, width, height] fijo
+AXES_RECT: tuple[float, float, float, float] = (0.12, 0.12, 0.83, 0.83)
 
-# Columnas que identifican configuración de una corrida (no series de
-# datos); se usan para detectar cuál varía entre los parquets pasados.
+# Columnas que identifican la configuración de una corrida.
+
 METADATA_COLUMNS = [
-    "topology", "n_agents", "k", "alpha", "epsilon", "gamma", "rho",
-    "seed", "n_rounds", "reward_window", "sample_every",
-    "coop_n_divisions", "reward_n_divisions", "ws_beta",
+    "topology",
+    "n_agents",
+    "k",
+    "alpha",
+    "epsilon",
+    "gamma",
+    "rho",
+    "seed",
+    "n_rounds",
+    "reward_window",
+    "sample_every",
+    "coop_n_divisions",
+    "reward_n_divisions",
+    "ws_beta",
+    "state_representation",
 ]
-
 
 def _color_for_index(i: int, n: int) -> tuple:
     cmap = matplotlib.colormaps["tab10" if n <= 10 else "hsv"]
@@ -57,7 +66,7 @@ def _color_for_index(i: int, n: int) -> tuple:
 
 
 def _detect_varying_params(dfs: list[pd.DataFrame]) -> list[str]:
-    """Devuelve las columnas de metadatos cuyos valores difieren entre los parquets."""
+    """Devuelve las columnas de metadatos cuyos valores difieren entre parquets."""
     varying = []
 
     for col in METADATA_COLUMNS:
@@ -65,6 +74,7 @@ def _detect_varying_params(dfs: list[pd.DataFrame]) -> list[str]:
             continue
 
         values = {df[col].to_numpy()[0] for df in dfs}
+
         if len(values) > 1:
             varying.append(col)
 
@@ -82,24 +92,40 @@ def _common_prefix(stems: list[str]) -> str:
 
 
 def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
-    dfs = [pd.read_parquet(p).sort_values("round") for p in parquet_paths]
+    dfs = [
+        pd.read_parquet(path).sort_values("round")
+        for path in parquet_paths
+    ]
+
     varying_params = _detect_varying_params(dfs)
 
     fig = plt.figure(figsize=FIG_SIZE)
     fig.patch.set_alpha(0.0)
+
     ax = fig.add_axes(AXES_RECT)
     ax.patch.set_alpha(0.0)
 
     min_round = None
     max_round = None
     n = len(dfs)
+
     for i, (path, df) in enumerate(zip(parquet_paths, dfs)):
         color = _color_for_index(i, n)
+
         rounds = df["round"].to_numpy()
         round_min = int(rounds.min())
         round_max = int(rounds.max())
-        min_round = round_min if min_round is None else min(min_round, round_min)
-        max_round = round_max if max_round is None else max(max_round, round_max)
+
+        min_round = (
+            round_min
+            if min_round is None
+            else min(min_round, round_min)
+        )
+        max_round = (
+            round_max
+            if max_round is None
+            else max(max_round, round_max)
+        )
 
         if varying_params:
             label = ", ".join(
@@ -110,12 +136,25 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
             label = path.stem
 
         ax.plot(
-            rounds, moving_average(df["cooperation_rate"].to_numpy(), smoothing),
-            color=color, linewidth=1, label=label,
+            rounds,
+            moving_average(
+                df["cooperation_rate"].to_numpy(),
+                smoothing,
+            ),
+            color=color,
+            linewidth=1,
+            label=label,
         )
+
         ax.plot(
-            rounds, moving_average(df["gini_window"].to_numpy(), smoothing),
-            color=color, linewidth=1, linestyle="--",
+            rounds,
+            moving_average(
+                df["gini_window"].to_numpy(),
+                smoothing,
+            ),
+            color=color,
+            linewidth=1,
+            linestyle="--",
         )
 
     ax.set_xlim(min_round, max_round)
@@ -124,15 +163,23 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
     ax.set_ylabel("Valor")
     ax.legend()
 
-    stems = [p.stem for p in parquet_paths]
+    stems = [path.stem for path in parquet_paths]
     out_name = _common_prefix(stems)
+
     prefix = out_name.split("_")[0]
     out_dir = FIGURES_DIR / prefix
     out_dir.mkdir(parents=True, exist_ok=True)
+
     out_path = out_dir / f"{out_name}.png"
 
-    fig.savefig(out_path, dpi=DPI, transparent=True)
+    fig.savefig(
+        out_path,
+        dpi=DPI,
+        transparent=True,
+    )
+
     plt.close(fig)
+
     print(f"Guardada: {out_path}")
 
 
@@ -143,6 +190,7 @@ def main() -> None:
 
     smoothing = int(sys.argv[1])
     parquet_paths = [Path(arg) for arg in sys.argv[2:]]
+
     make_figure(parquet_paths, smoothing)
 
 

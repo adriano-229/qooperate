@@ -159,7 +159,8 @@ python experiments/run.py <config_yaml> [<config_yaml2> ...]
 Ejemplo:
 
 ```bash
-python experiments/run.py config/e0/e0_s0.yaml config/e0/e0_s1.yaml
+python experiments/run.py config/e0_test/e0_n100_s1.yaml
+
 ```
 
 Cada YAML se corre de forma independiente; guarda su Parquet en `results/<prefijo>/<nombre_yaml>.parquet`, con la
@@ -169,13 +170,13 @@ ventana.
 ### 4. Generar figuras
 
 ```bash
-python experiments/figures.py <plot_smoothing> <e0_1.parquet> [<e0_2.parquet> ...]
+python experiments/figures.py <plot_smoothing> <data_file1.parquet> [<data_file2.parquet> ...]
 ```
 
 Ejemplo
 
 ```bash
-python experiments/figures.py 10 results/e0/e0_s0.parquet results/e0/e0_s1.parquet
+python experiments/figures.py 100 results/data/e0_test/e0_n100_s1.parquet
 ```
 
 Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas, en las que:
@@ -186,20 +187,8 @@ Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas
 Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
 media móvil aplicada al graficar.
 
-### 5. Figuras de aprendizaje
 
-```bash
-python experiments/learning_figures.py <parquet1> [<parquet2> ...]
-```
-
-Genera una figura por corrida con dos heatmaps:
-
-- ΔQ(s) = Q(s, C) - Q(s, D)
-- Frecuencia de visita acumulada por estado
-
-Las etiquetas del eje X se muestran en formato compacto, por ejemplo `(C,D,2,1)`.
-
-### 6. Replay interactivo
+### 5. Replay interactivo
 
 Luego de correr una única configuración con `experiments/run.py`, el proyecto guarda un archivo adicional `replay_<nombre>.npz` y abre automáticamente el visor interactivo.
 
@@ -209,7 +198,7 @@ También puede abrirse manualmente con:
 python experiments/viewer.py results/<prefijo>/<nombre>.parquet
 ```
 
-El visor reproduce el historial de la simulación sin volver a ejecutar el aprendizaje, y puede desactivarse en la corrida automática con `QOOPERATE_NO_VIEWER=1`.
+El visor reproduce el historial de la simulación sin volver a ejecutar el aprendizaje.
 
 ---
 

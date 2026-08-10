@@ -36,7 +36,8 @@ Para el experimento E0, todas las corridas compartieron los siguientes parámetr
 | coop_n_divisions   | 2              |
 | reward_n_divisions | 2              |
 | ws_beta            | 0.1            |
-| plot_smoothing     | _a determinar_ |
+| plot_smoothing            | _a determinar_ |
+| state_representation     | 1234     |
 
 **Nota**: los parámetros con valor _a determinar_ son los que se intentan encontrar en este experimento.
 
@@ -95,7 +96,7 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 |--------------------|-------------------------------------------|
 | ~~topology~~       | _varía en E1, fija en WS para los demás_  |
 | n_agents           | 100                                       |
-| ~~k~~              | _varía en E1, fija en 8 para los demás_   |
+| k                  | 8                                         |
 | ~~alpha~~          | _varía en E2, fija en 0.1 para los demás_ |
 | ~~epsilon~~        | _varía en E3, fija en 0.1 para los demás_ |
 | gamma              | 0.9                                       |
@@ -111,28 +112,16 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 
 **Nota**: los parámetros ~~tachados~~ son los que se específicamente se estudian en los experimentos posteriores.
 
-## E1 — Topología y conectividad
+## E1 — Topología
 
-Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}` y `k ∈ {4, 8, 12}`.
+Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}`, el gráfico resultante fue el siguiente:
 
-Para `topology=lattice` y `k ∈ {4, 8, 12}`, el gráfico resultante fue el siguiente:
 
-![exp1_tla_k.png](code/results/figures/exp1/exp1_tla_k.png)
-
-Para `topology=watts_strogatz` y `k ∈ {4, 8, 12}`, el gráfico resultante fue el siguiente:
-
-![exp1_tws_k.png](code/results/figures/exp1/exp1_tws_k.png)
-
-Para `topology=erdos_renyi` y `k ∈ {4, 8, 12}`, el gráfico resultante fue el siguiente:
-
-![exp1_ter_k.png](code/results/figures/exp1/exp1_ter_k.png)
 
 **Observaciones**:
 
 - Las 3 topologías alcanzaron niveles finales de $C_t$ y $G$ prácticamente iguales. Aunque las curvas presentaron
   pequeñas diferencias transitorias, ninguna estructura produjo un régimen estacionario distinto.
-- El grado de conectividad no afectó significativamente la velocidad ni forma de la convergencia y el nivel final de
-  cooperación fue prácticamente independiente de `k`.
 
 ## E2 — Tasa de aprendizaje α
 
@@ -161,7 +150,7 @@ Se realizaron corridas para `ε ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico re
 
 ## EA2 — Profundidad de información del vecindario ρ
 
-Se realizaron corridas para `ρ ∈ {1, 2, 5}`, el gráfico resultante fue el siguiente:
+Se realizaron corridas para `ρ ∈ {1, 2, 4}`, el gráfico resultante fue el siguiente:
 
 ![expa2_r.png](code/results/figures/expa2/expa2_r.png)
 
