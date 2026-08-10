@@ -1,45 +1,39 @@
 # QOOPERATE — Experimentos y conclusiones
 
-Este documento resume los experimentos realizados sobre el framework QOOPERATE descrito en `README.md` y las
-conclusiones obtenidas.
+Este documento resume la primera tanda de experimentos realizados sobre el framework QOOPERATE descrito en `README.md` y
+los resultados y conclusiones obtenidas a partir de ellos.
 
 **Recordatorio**: La representación gráfica de las dos métricas analizadas en los experimentos, Cooperación $C_t$ y el
 Índice de Gini $G$, se muestran en los gráficos como línea continua y de trazos, respectivamente.
 
-## E0 — Validación y calibración
+![e0_test_n100_seed1051802512.png](code/results/figures/e0/e0_test_n100_seed1051802512.png)
+
+## E0 — Calibración de parámetros
 
 Los experimentos en E0 tuvieron como objetivo encontrar una configuración de referencia para los experimentos
-posteriores. Se buscó:
-
-1. determinar la cantidad de _semillas_ adecuada para obtener resultados consistentes
-3. determinar la cantidad de _agentes_ adecuada para obtener resultados consistentes
-2. determinar la cantidad de _rondas_ adecuada para alcanzar régimen estacionario (en caso de que exista)
-4. determinar la cantidad de _plot_smoothing_ adecuada para la visualización de las curvas
+posteriores. Se buscó determinar la cantidad de semillas, agentes, rondas y smoothing que permitieran obtener resultados
+consistentes.
 
 ### Parámetros comunes a E0
 
 Para el experimento E0, todas las corridas compartieron los siguientes parámetros:
 
-| Parámetro          | Valor          |
-|--------------------|----------------|
-| topology           | watts_strogatz |
-| ~~n_agents~~       | _a determinar_ |
-| k                  | 8              |
-| alpha              | 0.1            |
-| epsilon            | 0.1            |
-| gamma              | 0.9            |
-| rho                | 1              |
-| ~~n_seeds~~        | _a determinar_ |
-| n_rounds           | 20000          |
-| reward_window      | 10             |
-| sample_every       | 10             |
-| coop_n_divisions   | 2              |
-| reward_n_divisions | 2              |
-| ws_beta            | 0.1            |
-| plot_smoothing            | _a determinar_ |
-| state_representation     | 1234     |
+| Parámetro            | Valor          |
+|----------------------|----------------|
+| topology             | watts_strogatz |
+| k                    | 8              |
+| alpha                | 0.1            |
+| epsilon              | 0.1            |
+| gamma                | 0.9            |
+| rho                  | 1              |
+| n_rounds             | 20000          |
+| reward_window        | 10             |
+| sample_every         | 10             |
+| coop_n_divisions     | 2              |
+| reward_n_divisions   | 2              |
+| ws_beta              | 0.1            |
+| state_representation | 1234           |
 
-**Nota**: los parámetros con valor _a determinar_ son los que se intentan encontrar en este experimento.
 
 ### Determinación de cantidad de semillas y rondas
 
@@ -47,11 +41,11 @@ Se realizaron corridas con `n_agents ∈ {100, 900}` y `n_seeds=5`.
 
 Con `n_agents=100` y `n_seeds=5`, el gráfico resultante fue el siguiente:
 
-![exp0_n100_s.png](code/results/figures/exp0/exp0_n100_s.png)
+![e0_test_n100_seed.png](code/results/figures/e0/e0_test_n100_seed.png)
 
 Con `n_agents=900` y `n_seeds=5`, el gráfico resultante fue el siguiente:
 
-![exp0_n900_s.png](code/results/figures/exp0/exp0_n900_s.png)
+![e0_test_n900_seed.png](code/results/figures/e0/e0_test_n900_seed.png)
 
 **Resultados**:
 
@@ -62,15 +56,15 @@ Con `n_agents=900` y `n_seeds=5`, el gráfico resultante fue el siguiente:
 
 ### Determinación de cantidad de agentes y smoothing
 
-Se realizaron corridas con `n_agents ∈ {100, 900}` y `plot_smoothing ∈ {10, 100}`.
+Se realizaron corridas con `n_agents = 900` y `plot_smoothing ∈ {10, 100}`.
 
 Con `plot_smoothing=10`, el gráfico resultante fue el siguiente:
 
-![exp0_n_sm10.png](code/results/figures/exp0/exp0_n_sm10.png)
+![e0_test_n900_seed136505587.png](code/results/figures/e0/e0_test_n900_seed136505587.png)
 
 Con `plot_smoothing=100`, el gráfico resultante fue el siguiente:
 
-![exp0_n_sm100.png](code/results/figures/exp0/exp0_n_sm100.png)
+![e0_test_n900_seed1812140441.png](code/results/figures/e0/e0_test_n900_seed1812140441.png)
 
 **Resultados**:
 
@@ -84,23 +78,24 @@ Con `plot_smoothing=100`, el gráfico resultante fue el siguiente:
 Además de los parámetros comunes ya mencionados, se toma como referencia para los experimentos posteriores a los
 siguientes parámetros:
 
-| Parámetro | Valor |
-|-----------|-------|
-| n_agents  | 100   |
-| n_seeds   | 1     |
-| smoothing | 100   |
+| Parámetro      | Valor |
+|----------------|-------|
+| n_agents       | 100   |
+| n_seeds        | 1     |
+| n_rounds       | 12000 |
+| plot_smoothing | 100   |
 
 Por lo tanto, la tabla final de parámetros de comunes para los experimentos posteriores es la siguiente:
 
 | Parámetro          | Valor                                     |
 |--------------------|-------------------------------------------|
 | ~~topology~~       | _varía en E1, fija en WS para los demás_  |
-| n_agents           | 100                                       |
-| k                  | 8                                         |
 | ~~alpha~~          | _varía en E2, fija en 0.1 para los demás_ |
 | ~~epsilon~~        | _varía en E3, fija en 0.1 para los demás_ |
+| ~~rho~~            | _varía en E4, fija en 1 para los demás_   |
+| n_agents           | 100                                       |
+| k                  | 8                                         |
 | gamma              | 0.9                                       |
-| ~~rho~~            | _varía en EA2, fija en 1 para los demás_  |
 | n_seeds            | 1                                         |
 | n_rounds           | 12000                                     |
 | reward_window      | 10                                        |
@@ -108,7 +103,7 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 | coop_n_divisions   | 2                                         |
 | reward_n_divisions | 2                                         |
 | ws_beta            | 0.1                                       |
-| smoothing          | 100                                       |
+| plot_smoothing     | 100                                       |
 
 **Nota**: los parámetros ~~tachados~~ son los que se específicamente se estudian en los experimentos posteriores.
 
@@ -116,7 +111,7 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 
 Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}`, el gráfico resultante fue el siguiente:
 
-
+![e1_topology_t.png](code/results/figures/e1/e1_topology_t.png)
 
 **Observaciones**:
 
@@ -127,7 +122,7 @@ Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}
 
 Se realizaron corridas para `α ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico resultante fue el siguiente:
 
-![exp2_a0.png](code/results/figures/exp2/exp2_a0.png)
+![e2_alpha_a0.png](code/results/figures/e2/e2_alpha_a0.png)
 
 **Observaciones**:
 
@@ -139,7 +134,7 @@ Se realizaron corridas para `α ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico re
 
 Se realizaron corridas para `ε ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico resultante fue el siguiente:
 
-![exp3_e0.png](code/results/figures/exp3/exp3_e0.png)
+![e3_epsilon_e0.png](code/results/figures/e3/e3_epsilon_e0.png)
 
 **Observaciones**:
 
@@ -148,11 +143,11 @@ Se realizaron corridas para `ε ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico re
   `ε`. Esto puede describirse debido a las posibilidades sin éxito, pero exploradas al fin, de encontrar estrategias
   cooperativas en un entorno que tiende a la deserción.
 
-## EA2 — Profundidad de información del vecindario ρ
+## E4 — Profundidad de información del vecindario ρ
 
 Se realizaron corridas para `ρ ∈ {1, 2, 4}`, el gráfico resultante fue el siguiente:
 
-![expa2_r.png](code/results/figures/expa2/expa2_r.png)
+![e4_rho_r.png](code/results/figures/e4/e4_rho_r.png)
 
 **Observaciones**:
 

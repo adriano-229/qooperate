@@ -7,11 +7,6 @@ Iterado con sus vecinos.
 
 **Alumno:** Adriano Fabris
 
-> ⚠️ Este documento describe el proyecto y los experimentos que se llevarán a cabo, lo marcado con ~~tachado~~ indica un
-> contenido eliminado con respecto al anteproyecto. Para ver los motivos, ver la sección "Cambios al anteproyecto" al
-> final de este
-> documento.
-
 ---
 
 ## Objetivo
@@ -119,15 +114,40 @@ parámetros.
 | `coop_n_divisions`     | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
 | `reward_n_divisions`   | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
 | `ws_beta`              | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
-| `n_seeds`              | Cantidad de semillas para reproducibilidad                                                                            | ≥ 0                                                   |
+| `n_seeds`              | Cantidad de semillas para la corrida                                                                                  | ≥ 0                                                   |
 
 ---
 
-## Uso
+## Estructura del Repositorio
 
-### 1. Instalación
+```text
+code/
+├── src/qooperate/         
+│   ├── agent.py            # Agente Q-learning
+│   ├── network.py          # Topologías
+│   ├── simulation.py       # Loop de aprendizaje
+│   ├── payoff.py           # Matriz del IPD
+│   ├── utils.py            
+│   └── metrics.py          
+│
+├── experiments/            
+│   ├── generate_yamls.py   # Genera la configuración de los experimentos mediante archivos .yaml  
+│   ├── run.py              # Ejecuta los experimentos y guarda datos y artefactos
+│   ├── figures.py          # Genera figuras comparativas a partir de los .parquets
+│   └── viewer.py           # Replay interactivo de una corrida
+│
+├── config/<exp>/           # Configuración .yaml de cada experimento
+│
+├── results/
+│   ├── data/               # Datos .parquet y artefactos .npz de las corridas
+│   └── figures/            # Figuras
+│    
+└── pyproject.toml          # Dependencias
+```
 
-Para instalar el paquete con las dependencias necesarias hay que colocarse en la carpeta `/code` y ejecutar:
+## Instalación
+
+Desde `code/`:
 
 ```bash
 python3 -m venv .venv
@@ -136,134 +156,45 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-### 2. Generar los YAMLs interactivamente
+## Flujo normal
+
+### 1) Generar YAMLs
 
 ```bash
 python experiments/generate_yamls.py
 ```
 
-Pide un nombre de experimento y luego cada parámetro de la tabla anterior, uno por uno, con su valor por defecto entre
-paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se puede pasar más de un valor por parámetro,
-separados por espacio (ej.
-`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las combinaciones
-y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los parámetros que
-realmente varían (los que quedaron fijos no aparecen en el nombre). Cada parámetro se valida al ingresarlo (ej. `k` debe
-ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor no es válido, se vuelve a pedir solo ese parámetro.
+El script pide un nombre de experimento y luego los parámetros uno por uno. Si se ingresan varios valores, genera el
+producto cartesiano y escribe un YAML por combinación en `config/<experimento>/`.
 
-### 3. Correr las configuraciones
+### 2) Ejecutar una corrida
 
 ```bash
 python experiments/run.py <config_yaml> [<config_yaml2> ...]
 ```
 
-Ejemplo:
+`run.py` guarda en `results/data/<prefijo>/`:
+
+- `<stem>.parquet` con las métricas muestreadas;
+- `learning_<stem>.npz` con `delta_q` y visitas de estados;
+- `replay_<stem>.npz` con acciones, recompensas e historiales por ronda.
+
+### 3) Generar figuras
 
 ```bash
-python experiments/run.py config/e0_test/e0_n100_s1.yaml
-
+python experiments/figures.py <plot_smoothing> <data_parquet1> [<data_parquet2> ...]
 ```
 
-Cada YAML se corre de forma independiente; guarda su Parquet en `results/<prefijo>/<nombre_yaml>.parquet`, con la
-evolución temporal completa (muestreada según `sample_every`) de tasa de cooperación, recompensa media y Gini de
-ventana.
+`figures.py` compara uno o más parquets y escribe un PNG en `results/figures/<prefijo>/`, usando el prefijo común del
+stem.
 
-### 4. Generar figuras
+### 4) Abrir replay manualmente
 
 ```bash
-python experiments/figures.py <plot_smoothing> <data_file1.parquet> [<data_file2.parquet> ...]
+python experiments/viewer.py <data_parquet1> [<data_parquet2> ...]
 ```
 
-Ejemplo
-
-```bash
-python experiments/figures.py 100 results/data/e0_test/e0_n100_s1.parquet
-```
-
-Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas, en las que:
-
-- Línea continua — denota la tasa global de cooperación $C_t$
-- Línea punteada — denota el índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
-
-Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
-media móvil aplicada al graficar.
-
-
-### 5. Replay interactivo
-
-Luego de correr una única configuración con `experiments/run.py`, el proyecto guarda un archivo adicional `replay_<nombre>.npz` y abre automáticamente el visor interactivo.
-
-También puede abrirse manualmente con:
-
-```bash
-python experiments/viewer.py results/<prefijo>/<nombre>.parquet
-```
-
-El visor reproduce el historial de la simulación sin volver a ejecutar el aprendizaje.
-
----
-
-## Métricas de Evaluación
-
-* Tasa global de cooperación $C_t$: proporción de agentes cooperadores, muestreadas cada `sample_every` rondas.
-* Promedio de recompensas por agente: se guarda y acumula para calcular $G$.
-* Índice de Gini de ventana $G$: desigualdad en la distribución de la recompensa acumulada dentro de la ventana reciente
-  de `sample_every` rondas.
-* ~~Estabilidad temporal (volatilidad)~
-* ~~Tiempo hasta estabilización~~
-
----
-
-## Hipótesis
-
-### Hipótesis Principales
-
-**H1. Efecto de la estructura:** la topología de la red afecta significativamente el nivel final de cooperación. ¿La
-forma en que los agentes están conectados influye en su capacidad para cooperar?
-
-**H2. Efecto del aprendizaje:** la tasa de aprendizaje interfiere en el camino hacia un equilibrio (de haber uno). ¿Cómo
-impacta la velocidad de aprendizaje en el largo plazo?
-
-**H3. Efecto de la exploración:** ciertos valores de exploración altos ($\varepsilon > 0.1$) favorecen el hallazgo de
-entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
-
-### Hipótesis Alternativas
-
-~~**HA1.** La presencia de agentes aleatorios puede prevenir el colapso total de la cooperación.~~
-
-**HA2.** La inclusión de información extendida (vecinos de segundo o mayor orden $\rho > 1$) puede fortalecer la
-cooperación.
-
-**HA3.** La desigualdad de recompensas aumenta con el grado medio de conectividad de la red, $k$.
-
----
-
-## Cambios al anteproyecto
-
-### Métricas
-
-La métrica de estabilidad temporal (volatilidad) se descartó debido a que el interés de visualizar un gráfico y detectar
-visualmente la medida resultaba ser de mayor interés que simplemente el número.
-
-La métrica de tiempo hasta estabilización se descartó debido a que esta asumía un comportamiento convergente y a su vez
-hacía uso de la métrica de estabilidad temporal, también descartada.
-
-### Hipótesis H2 y H3
-
-Se reescribieron por claridad y para que sean más fácilmente evaluables.
-
-### Hipótesis alternativa HA1
-
-La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la inclusión de tales
-agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo. Por lo tanto, la
-hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
-
-### Cambio en la bibliografía
-
-Se agrega a la bibliografía el libro de Brunton & Kutz (2019) como referencia para RL (capítulo 11:
-Reinforcement Learning).
-
-Se descarta el uso de la referencia de Shoham et al. (2007).
-
+El replay consume el parquet y sus `learning_*.npz` / `replay_*.npz` asociados. No vuelve a correr la simulación.
 
 ---
 
@@ -271,14 +202,9 @@ Se descarta el uso de la referencia de Shoham et al. (2007).
 
 **Libros**
 
-- Russell, S. & Norvig, P. (2021). *Artificial Intelligence: A Modern Approach* (4ª ed.).
 - Axelrod, R. (1984). *The Evolution of Cooperation*.
 - Brunton, S. & Kutz, J. (2019). *Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and
   Control*.
-
-**Papers**
-
-~~- Shoham, Y. et al. (2007). *If multi-agent learning is the answer, what is the question?*.~~
 
 **Videos**
 

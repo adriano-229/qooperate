@@ -16,6 +16,7 @@ import random
 import sys
 from math import isqrt
 from pathlib import Path
+from collections.abc import Callable
 
 CONFIG_DIR = Path(__file__).resolve().parents[1] / "config"
 
@@ -87,15 +88,10 @@ def _rho_value(v: str) -> int:
 
 
 def _state_representation(v: str) -> str:
-    v_upper = v.strip().upper()
-    if v_upper in ("1", "2", "3", "4"):
-        v_upper = v_upper  # keep numeric for lookup
-    else:
-        # If it's like "S1", "S12", etc., use as is; otherwise try mapping
-        v_upper = v.upper()
-    if v_upper not in STATE_REPR_MAP:
+    key = v.strip().upper()
+    if key not in STATE_REPR_MAP:
         raise ValueError("debe ser 1 (S1), 2 (S12), 3 (S123) o 4 (S1234)")
-    return STATE_REPR_MAP[v_upper]
+    return STATE_REPR_MAP[key]
 
 
 def _ws_beta(v: str) -> float:
@@ -126,7 +122,7 @@ PARAMETERS = [
 ]
 
 
-def ask_values(key: str, prompt_text: str, default: str, validator) -> list:
+def ask_values(key: str, prompt_text: str, default: str, validator: Callable[[str], object]) -> list[object]:
     while True:
         raw = input(f"{prompt_text} (default: {default}): ").strip()
         if raw.upper() == "Q":
@@ -148,9 +144,6 @@ def ask_values(key: str, prompt_text: str, default: str, validator) -> list:
 def format_value_for_name(key: str, value) -> str:
     if key == "topology":
         return TOPOLOGY_ABBR[value]
-    if key == "state_representation":
-        # e.g., "S12" -> "S12" (ya lo usa la abreviatura "sr")
-        return value
     if isinstance(value, float):
         return str(value).replace(".", "")
     return str(value)
@@ -171,7 +164,7 @@ def main() -> None:
             return
 
         answers: dict[str, list] = {}
-        for key, abbr, prompt_text, default, validator in PARAMETERS:
+        for key, _abbr, prompt_text, default, validator in PARAMETERS:
             answers[key] = ask_values(key, prompt_text, default, validator)
 
         # Producto cartesiano sin expandir n_seeds todavía
@@ -184,18 +177,14 @@ def main() -> None:
         for values in itertools.product(*(answers[k] for k in keys)):
             combos_no_seeds.append(dict(zip(keys, values)))
 
-        # Generar semillas aleatorias para cada combinación según n_seeds
-        # Fijamos una semilla base para reproducibilidad de la generación de semillas
-        random.seed(42)
+        rng = random.Random(42)
         final_combos = []
         for combo in combos_no_seeds:
             n_seeds = combo["n_seeds"]
-            # Generar n_seeds semillas al azar (enteros positivos)
-            seeds = [random.randint(0, 2 ** 31 - 1) for _ in range(n_seeds)]
+            seeds = [rng.randint(0, 2 ** 31 - 1) for _ in range(n_seeds)]
             for seed in seeds:
                 new_combo = {k: v for k, v in combo.items() if k != "n_seeds"}
                 new_combo["seed"] = seed
-                # Asegurar que state_representation esté presente (ya lo está)
                 final_combos.append(new_combo)
 
         # Recalcular claves que varían entre todos los combos finales (sin n_seeds)

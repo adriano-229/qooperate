@@ -53,10 +53,10 @@ def _generate_lattice(n: int, k: int) -> nx.Graph:
 def generate_network(
         topology: TopologyType, n: int, k: int, seed: int, ws_beta: float = 0.1
 ) -> nx.Graph:
-    """Genera la red. No reintenta ni corrige conexidad: Erdős-Rényi y
-    Watts-Strogatz pueden devolver redes con más de una componente
-    conexa (ver NOTES.md, sección "Conexidad de redes"). Simulation
-    debe poder operar sobre esas redes tal cual.
+    """Genera la red de interacción para la topología elegida.
+
+    Erdős-Rényi y Watts-Strogatz pueden devolver grafos desconectados; la
+    simulación los usa tal cual.
     """
     match topology:
         case TopologyType.LATTICE:
@@ -70,10 +70,7 @@ def generate_network(
 
 
 def build_adjacency_list(graph: nx.Graph, rho: int = 1) -> list[list[int]]:
-    """Vecinos de orden rho: nodos a distancia 1..rho en el grafo (BFS),
-    excluyendo al propio nodo. rho=1 (default) es el vecindario directo
-    de siempre. rho>1 expande con quién juega el agente (ver NOTES.md,
-    experimento EA1)."""
+    """Devuelve los vecinos a distancia 1..rho, excluyendo el nodo propio."""
     n = graph.number_of_nodes()
     if rho == 1:
         return [list(graph.neighbors(i)) for i in range(n)]

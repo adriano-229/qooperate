@@ -13,10 +13,10 @@ N_ACTIONS = 2
 
 @dataclass
 class SimulationResult:
-    """Serie sub-muestreada a los puntos de checkpoint (ver sample_every).
+    """Serie sub-muestreada a los puntos de checkpoint (según sample_every).
 
     gini_window es un Gini de ventana (resetea cada checkpoint), no el
-    Gini acumulado histórico total. Ver NOTES.md.
+    Gini acumulado histórico total.
     final_cumulative_reward sí es la recompensa acumulada total, nunca
     resetea, y no incluye rondas en que un agente quedó aislado.
     """
@@ -35,7 +35,7 @@ class SimulationResult:
 
 
 class Simulation:
-    """Ejecuta el IPD multiagente sobre una red fija (ver doc. sección 2.8)."""
+    """Ejecuta el IPD multiagente sobre una red fija."""
 
     def __init__(
             self,
@@ -63,8 +63,7 @@ class Simulation:
             n_s3,
             n_s4,
         )
-        # Nodos sin vecinos (posibles en Erdős-Rényi/Watts-Strogatz, ver
-        # NOTES.md): no juegan, se excluyen de coop_rate y gini_window.
+        # Nodos sin vecinos no juegan y se excluyen de coop_rate y gini_window.
         self.isolated = np.array([len(adj) == 0 for adj in self.adjacency])
         self.agents = [
             QLearningAgent(

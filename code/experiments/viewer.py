@@ -24,7 +24,6 @@ from qooperate.utils import (  # noqa: E402
 @dataclass
 class ReplayData:
     parquet_path: Path
-    df: pd.DataFrame
     graph: nx.Graph
     positions: np.ndarray
     rounds: np.ndarray
@@ -51,17 +50,14 @@ def _sparse_ticks(size: int, max_ticks: int = 12) -> list[int]:
 
 def _format_state_label(values: tuple[int, int, int, int], representation: StateRepresentation) -> str:
     active = values[: representation.value]
-    parts = []
-    for i, value in enumerate(active):
-        parts.append(str(value))
-    return "(" + ",".join(parts) + ")"
+    return "(" + ",".join(map(str, active)) + ")"
 
 
 def build_state_labels(representation: StateRepresentation, n_s3: int, n_s4: int) -> list[str]:
-    labels = []
-    for idx in range(compute_n_states(representation, n_s3, n_s4)):
-        labels.append(_format_state_label(decode_state(idx, representation, n_s3, n_s4), representation))
-    return labels
+    return [
+        _format_state_label(decode_state(idx, representation, n_s3, n_s4), representation)
+        for idx in range(compute_n_states(representation, n_s3, n_s4))
+    ]
 
 
 def _color_lerp(start: tuple[int, int, int], end: tuple[int, int, int], t: np.ndarray) -> np.ndarray:
@@ -132,7 +128,6 @@ def _load_replay_data(parquet_path: Path) -> ReplayData:
 
     return ReplayData(
         parquet_path=parquet_path,
-        df=df,
         graph=graph,
         positions=positions,
         rounds=rounds,
@@ -159,20 +154,24 @@ class ReplayWindow(QtWidgets.QMainWindow):
         self.speed = 1.0
         self.recent_window = max(1, data.reward_window)
 
+        self.setStyleSheet("background-color: white;")
+
         self.setWindowTitle(f"QOOPERATE Replay — {data.parquet_path.stem}")
         self.resize(1500, 900)
 
         central = QtWidgets.QWidget(self)
         self.setCentralWidget(central)
+        central.setStyleSheet("background-color: white;")
         root = QtWidgets.QVBoxLayout(central)
         root.setContentsMargins(8, 8, 8, 8)
         root.setSpacing(8)
 
         splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal, self)
+        splitter.setStyleSheet("background-color: white;")
         root.addWidget(splitter, 1)
 
         self.graph_widget = pg.PlotWidget()
-        self.graph_widget.setBackground((255, 255, 255, 0))
+        self.graph_widget.setBackground("w")
         self.graph_widget.hideAxis("bottom")
         self.graph_widget.hideAxis("left")
         self.graph_widget.setAspectLocked(True)
@@ -182,11 +181,13 @@ class ReplayWindow(QtWidgets.QMainWindow):
         splitter.addWidget(self.graph_widget)
 
         right = pg.GraphicsLayoutWidget()
+        right.setBackground("w")
         splitter.addWidget(right)
         splitter.setStretchFactor(0, 2)
         splitter.setStretchFactor(1, 3)
 
         self.coop_plot = right.addPlot(row=0, col=0)
+        self.coop_plot.getViewBox().setBackgroundColor("w")
         self.coop_plot.setTitle("Cooperación + Gini")
         self.coop_plot.setLabel("bottom", "Ronda")
         self.coop_plot.setLabel("left", "Valor")
@@ -198,6 +199,7 @@ class ReplayWindow(QtWidgets.QMainWindow):
         self.coop_plot.addItem(self.coop_cursor)
 
         self.delta_plot = right.addPlot(row=1, col=0)
+        self.delta_plot.getViewBox().setBackgroundColor("w")
         self.delta_plot.setTitle("Heatmap de aprendizaje")
         self.delta_plot.setLabel("bottom", "Ronda")
         self.delta_plot.setLabel("left", "Estado")
@@ -208,6 +210,7 @@ class ReplayWindow(QtWidgets.QMainWindow):
         self.delta_plot.addItem(self.delta_cursor)
 
         self.visits_plot = right.addPlot(row=2, col=0)
+        self.visits_plot.getViewBox().setBackgroundColor("w")
         self.visits_plot.setTitle("Frecuencia de estados")
         self.visits_plot.setLabel("bottom", "Ronda")
         self.visits_plot.setLabel("left", "Estado")
@@ -254,10 +257,10 @@ class ReplayWindow(QtWidgets.QMainWindow):
 
         controls.addWidget(QtWidgets.QLabel("Velocidad"))
         self.speed_combo = QtWidgets.QComboBox()
-        self.speed_options = [(0.25, "0.25×"), (0.5, "0.5×"), (1.0, "1×"), (2.0, "2×"), (4.0, "4×"), (8.0, "8×")]
+        self.speed_options = [(1.0, "1×"), (8.0, "8×"), (32.0, "32×")]
         for value, label in self.speed_options:
             self.speed_combo.addItem(label, value)
-        self.speed_combo.setCurrentIndex(2)
+        self.speed_combo.setCurrentIndex(0)
         self.speed_combo.currentIndexChanged.connect(self._speed_changed)
         controls.addWidget(self.speed_combo)
 
