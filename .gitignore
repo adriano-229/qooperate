@@ -6,4 +6,4 @@ __pycache__/
 *.idea
 /code/src/qooperate.egg-info/*
 /AGENTS.md
-/code/results/data/
+/code/results/data/e*
