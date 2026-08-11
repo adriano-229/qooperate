@@ -1,12 +1,30 @@
-# QOOPERATE — Experimentos y conclusiones V1
+# QOOPERATE — Experimentos y conclusiones
 
-Este documento resume la primera tanda de experimentos realizados sobre el framework QOOPERATE descrito en `README.md` y
+Este documento describe experimentos realizados sobre el framework QOOPERATE descrito en `README.md` y
 los resultados y conclusiones obtenidas a partir de ellos.
 
-**Recordatorio**: La representación gráfica de las dos métricas analizadas en los experimentos, Cooperación $C_t$ y el
-Índice de Gini $G$, se muestran en los gráficos como línea continua y de trazos, respectivamente.
+### Importante
+
+Por un lado, la representación gráfica de la Cooperación $C_t$ y el Índice de Gini $G$, se muestran en los gráficos como
+línea continua y de trazos, respectivamente. Véase en la siguiente imagen.
 
 ![e0_test_n100_seed1051802512.jpg](code/results/figures/e0/e0_test_n100_seed1051802512.jpg)
+
+Por otro lado, los estados de los gráficos de los heatmaps, se codifican de la siguiente manera: $S = (s1, s2, s3, s4)$.
+
+Como los subestados de todos los experimentos a excepción del E5 mantuvieron la misma cardinalidad, existen 2 * 2 * 3 *
+3 = 36 estados posibles, cada uno pudiendo tomar la acción de Cooperar o No-Cooperar. Es por este motivo que se opta por
+este tipo de representación.
+
+![states.png](code/report/states.png)
+
+Por ejemplo:
+
+![learning_e0_test_n100_seed107420369.jpg](code/report/learning_e0_test_n100_seed107420369.jpg)
+
+A partir de esto, podemos distinguir los estados "más cooperativos" y los "menos cooperativos":
+
+![learning_e0_test_n100_seed107420369_2.jpg](code/report/learning_e0_test_n100_seed107420369_2.jpg)
 
 ## E0 — Calibración de parámetros
 
@@ -104,11 +122,12 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 | ws_beta            | 0.1                                       |
 | plot_smoothing     | 100                                       |
 
-**Nota**: los parámetros ~~tachados~~ son los que se específicamente se estudian en los experimentos posteriores.
+**Nota**: los parámetros ~~tachados~~ son los que se estudian específicamente en los experimentos posteriores.
 
 ## E1 — Topología
 
-Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}`, el gráfico resultante fue el siguiente:
+Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}`, los gráficos resultantes fueron los
+siguientes:
 
 ![e1_topology_t.jpg](code/results/figures/e1/e1_topology_t.jpg)
 

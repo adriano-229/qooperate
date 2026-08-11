@@ -381,16 +381,37 @@ class ReplayWindow(QtWidgets.QMainWindow):
             self.delta_cursor.setPos(current_round)
             self.visits_cursor.setPos(current_round)
 
-    def _update_heatmap(self, image: pg.ImageItem, data: np.ndarray, plot: pg.PlotItem, x0: int, x1: int) -> None:
-        levels = None
+    def _update_heatmap(
+            self,
+            image: pg.ImageItem,
+            data: np.ndarray,
+            plot: pg.PlotItem,
+            x0: int,
+            x1: int,
+    ) -> None:
         if data.size:
-            low = float(np.nanmin(data))
-            high = float(np.nanmax(data))
-            if low == high:
-                high = low + 1.0
-            levels = (low, high)
+            if image is self.delta_image:
+                max_abs = float(np.nanmax(np.abs(data)))
+                max_abs = max(max_abs, 1e-12)
+                levels = (-max_abs, max_abs)
+            else:
+                low = float(np.nanmin(data))
+                high = float(np.nanmax(data))
+                if low == high:
+                    high = low + 1.0
+                levels = (low, high)
+        else:
+            levels = None
+
         image.setImage(data, autoLevels=False, levels=levels)
-        image.setRect(QtCore.QRectF(float(x0), 0.0, float(max(x1 - x0, 1)), float(data.shape[0])))
+        image.setRect(
+            QtCore.QRectF(
+                float(x0),
+                0.0,
+                float(max(x1 - x0, 1)),
+                float(data.shape[0]),
+            )
+        )
 
     def set_round_from_slider(self, value: int) -> None:
         self._update_frame(value - 1)
