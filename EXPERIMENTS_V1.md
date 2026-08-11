@@ -6,7 +6,7 @@ los resultados y conclusiones obtenidas a partir de ellos.
 **Recordatorio**: La representación gráfica de las dos métricas analizadas en los experimentos, Cooperación $C_t$ y el
 Índice de Gini $G$, se muestran en los gráficos como línea continua y de trazos, respectivamente.
 
-![e0_test_n100_seed1051802512.png](code/results/figures/e0/e0_test_n100_seed1051802512.png)
+![e0_test_n100_seed1051802512.jpg](code/results/figures/e0/e0_test_n100_seed1051802512.jpg)
 
 ## E0 — Calibración de parámetros
 
@@ -34,18 +34,17 @@ Para el experimento E0, todas las corridas compartieron los siguientes parámetr
 | ws_beta              | 0.1            |
 | state_representation | 1234           |
 
-
-### Determinación de cantidad de semillas y rondas
+### Determinación de cantidad de agentes, semillas y rondas
 
 Se realizaron corridas con `n_agents ∈ {100, 900}` y `n_seeds=5`.
 
 Con `n_agents=100` y `n_seeds=5`, el gráfico resultante fue el siguiente:
 
-![e0_test_n100_seed.png](code/results/figures/e0/e0_test_n100_seed.png)
+![e0_test_n100_seed.jpg](code/results/figures/e0/e0_test_n100_seed.jpg)
 
 Con `n_agents=900` y `n_seeds=5`, el gráfico resultante fue el siguiente:
 
-![e0_test_n900_seed.png](code/results/figures/e0/e0_test_n900_seed.png)
+![e0_test_n900_seed.jpg](code/results/figures/e0/e0_test_n900_seed.jpg)
 
 **Resultados**:
 
@@ -53,23 +52,23 @@ Con `n_agents=900` y `n_seeds=5`, el gráfico resultante fue el siguiente:
   fueron prácticamente indistinguibles entre semillas.
 - Se adopta `n_rounds=12000` para los experimentos posteriores, ya que $C_t$ y $G$ alcanzan un régimen estable hacia la
   ronda 10000.
+- Se adopta `n_agents=100` para los experimentos posteriores, ya que aumentar la población no aportó información
+  adicional apreciable.
 
-### Determinación de cantidad de agentes y smoothing
+### Determinación del smoothing
 
 Se realizaron corridas con `n_agents = 900` y `plot_smoothing ∈ {10, 100}`.
 
 Con `plot_smoothing=10`, el gráfico resultante fue el siguiente:
 
-![e0_test_n900_seed136505587.png](code/results/figures/e0/e0_test_n900_seed136505587.png)
+![e0_test_n900_seed136505587.jpg](code/results/figures/e0/e0_test_n900_seed136505587.jpg)
 
 Con `plot_smoothing=100`, el gráfico resultante fue el siguiente:
 
-![e0_test_n900_seed1812140441.png](code/results/figures/e0/e0_test_n900_seed1812140441.png)
+![e0_test_n900_seed1812140441.jpg](code/results/figures/e0/e0_test_n900_seed1812140441.jpg)
 
 **Resultados**:
 
-- Se adopta `n_agents=100` para los experimentos posteriores, ya que aumentar la población no aportó información
-  adicional apreciable.
 - Se adopta `plot_smoothing=100` para los experimentos posteriores, ya que es un valor que permite suavizar la curva de
   forma acorde con la cantidad de rondas.
 
@@ -111,7 +110,7 @@ Por lo tanto, la tabla final de parámetros de comunes para los experimentos pos
 
 Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}`, el gráfico resultante fue el siguiente:
 
-![e1_topology_t.png](code/results/figures/e1/e1_topology_t.png)
+![e1_topology_t.jpg](code/results/figures/e1/e1_topology_t.jpg)
 
 **Observaciones**:
 
@@ -122,7 +121,7 @@ Se realizaron corridas para `topology ∈ {lattice, watts_strogatz, erdos_renyi}
 
 Se realizaron corridas para `α ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico resultante fue el siguiente:
 
-![e2_alpha_a0.png](code/results/figures/e2/e2_alpha_a0.png)
+![e2_alpha_a0.jpg](code/results/figures/e2/e2_alpha_a0.jpg)
 
 **Observaciones**:
 
@@ -134,7 +133,7 @@ Se realizaron corridas para `α ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico re
 
 Se realizaron corridas para `ε ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico resultante fue el siguiente:
 
-![e3_epsilon_e0.png](code/results/figures/e3/e3_epsilon_e0.png)
+![e3_epsilon_e0.jpg](code/results/figures/e3/e3_epsilon_e0.jpg)
 
 **Observaciones**:
 
@@ -147,13 +146,31 @@ Se realizaron corridas para `ε ∈ {0.01, 0.05, 0.1, 0.2, 0.5}`, el gráfico re
 
 Se realizaron corridas para `ρ ∈ {1, 2, 4}`, el gráfico resultante fue el siguiente:
 
-![e4_rho_r.png](code/results/figures/e4/e4_rho_r.png)
+![e4_rho_r.jpg](code/results/figures/e4/e4_rho_r.jpg)
 
 **Observaciones**:
 
 - El aumento de `ρ` produjo mayor velocidad hacia la convergencia, pero nuevamente no modificó sustancialmente el nivel
   final de cooperación. La información adicional permitió al agente reaccionar a un entorno más amplio, pero no generó
   cooperación sostenida, sino que al contrario, el efecto de la no-cooperación se propagó más rápidamente.
+
+## E5 — Subrepresentaciones de estado
+
+Se realizaron corridas para diferentes subrepresentaciones del estado:
+
+- S1: compuesto por el estado s1
+- S12: compuesto por los estados s1 y s2
+- S123: compuesto por los estados s1, s2 y s3
+- S1234: compuesto por los estados s1, s2, s3 y s4 (todos)
+
+El gráfico resultante fue el siguiente:
+
+![e5_states_srS1.jpg](code/results/figures/e5/e5_states_srS1.jpg)
+
+**Observaciones**:
+
+- Se puede apreciar que a mayor contexto, descrito por un espacio de estados mayor, la velocidad de convergencia se
+  vuelve más lenta.
 
 ## Conclusiones
 
