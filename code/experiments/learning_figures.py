@@ -152,7 +152,7 @@ def make_figure(parquet_path: Path) -> Path:
     prefix = parquet_path.stem.split("_")[0]
     out_dir = FIGURES_DIR / prefix
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"{parquet_path.stem}_learning.png"
+    out_path = out_dir / f"learning_{parquet_path.stem}.jpg"
     fig.savefig(out_path, dpi=DPI, transparent=True)
     plt.close(fig)
     print(f"Guardada: {out_path}")

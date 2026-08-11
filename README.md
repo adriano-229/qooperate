@@ -118,7 +118,7 @@ parámetros.
 
 ---
 
-## Estructura del Repositorio
+## Estructura principal del repositorio
 
 ```text
 code/
@@ -156,7 +156,7 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-## Flujo normal
+## Flujo normal de desarrollo
 
 ### 1) Generar YAMLs
 
@@ -185,16 +185,25 @@ python experiments/run.py <config_yaml> [<config_yaml2> ...]
 python experiments/figures.py <plot_smoothing> <data_parquet1> [<data_parquet2> ...]
 ```
 
-`figures.py` compara uno o más parquets y escribe un PNG en `results/figures/<prefijo>/`, usando el prefijo común del
+`figures.py` compara uno o más parquets y escribe un JPG en `results/figures/<prefijo>/`, usando el prefijo común del
 stem.
 
-### 4) Abrir replay manualmente
-
 ```bash
-python experiments/viewer.py <data_parquet1> [<data_parquet2> ...]
+python experiments/learning_agents.py <data_parquet1> [<data_parquet2> ...]
 ```
 
-El replay consume el parquet y sus `learning_*.npz` / `replay_*.npz` asociados. No vuelve a correr la simulación.
+`learning_agents.py` genera un JPG en `results/figures/learning_<prefijo>/` con los heatmaps de ΔQ y visitas de estados
+de los agentes.
+
+### 4) Replay interactivo
+
+```bash
+python experiments/viewer.py <data_parquet>
+```
+
+El replay consume el parquet y sus `learning_*.npz` / `replay_*.npz` asociados. No vuelve a correr la simulación. Esta
+UI interactiva contiene el grafo de la interacción y la evolución de los 3 gráficos ya descritos: de cooperación y gini,
+heatmap de ΔQ y heatmap de visitas de estados.
 
 ---
 

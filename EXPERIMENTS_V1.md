@@ -1,4 +1,4 @@
-# QOOPERATE — Experimentos y conclusiones
+# QOOPERATE — Experimentos y conclusiones V1
 
 Este documento resume la primera tanda de experimentos realizados sobre el framework QOOPERATE descrito en `README.md` y
 los resultados y conclusiones obtenidas a partir de ellos.

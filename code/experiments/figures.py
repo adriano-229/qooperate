@@ -170,7 +170,7 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
     out_dir = FIGURES_DIR / prefix
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    out_path = out_dir / f"{out_name}.png"
+    out_path = out_dir / f"{out_name}.jpg"
 
     fig.savefig(
         out_path,
