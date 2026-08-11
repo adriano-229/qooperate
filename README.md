@@ -182,7 +182,7 @@ python experiments/run.py <config_yaml> [<config_yaml2> ...]
 ### 3) Generar figuras
 
 ```bash
-python experiments/figures.py <plot_smoothing> <data_parquet1> [<data_parquet2> ...]
+python experiments/figures.py <data_parquet1> [<data_parquet2> ...]
 ```
 
 `figures.py` compara uno o más parquets y escribe un JPG en `results/figures/<prefijo>/`, usando el prefijo común del

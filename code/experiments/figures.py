@@ -184,14 +184,13 @@ def make_figure(parquet_paths: list[Path], smoothing: int) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print(__doc__)
         sys.exit(1)
 
-    smoothing = int(sys.argv[1])
-    parquet_paths = [Path(arg) for arg in sys.argv[2:]]
+    parquet_paths = [Path(arg) for arg in sys.argv[1:]]
 
-    make_figure(parquet_paths, smoothing)
+    make_figure(parquet_paths, 100)
 
 
 if __name__ == "__main__":
