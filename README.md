@@ -1,7 +1,7 @@
 # QOOPERATE
 
-Estudio del surgimiento o colapso de la cooperación en redes de agentes Q-Learning que juegan un Dilema del Prisionero
-Iterado con sus vecinos.
+Estudio del comportamiento de agentes que juegan el dilema del prisionero iterado en una red y aprenden mediante
+refuerzo.
 
 **Código:** `QOOPERATE`
 
@@ -11,9 +11,17 @@ Iterado con sus vecinos.
 
 ## Objetivo
 
-El proyecto busca explorar el surgimiento o colapso de la cooperación en sociedades artificiales dinámicas compuestas
-por agentes racionales que aprenden mediante refuerzo, evaluando cómo la estructura social (topología de red) y la
-utilización de la información local influyen en el comportamiento colectivo.
+El proyecto puede describirse en dos etapas en cuanto al desarrollo de sus objetivos. En la primera, el objetivo fue
+encontrar condiciones para las cuales se posibiliten tanto comportamientos cooperativos como no cooperativos, evaluando
+cómo influían la estructura social (topología de red) y la utilización de la información local en el ritmo de
+convergencia y el nivel de cooperación alcanzado. Esta etapa fue la descrita en el anteproyecto y la que motivó a llevar
+a cabo el mismo.
+
+Debido a que los resultados de todos los experimentos planeados para la primera etapa fueron prácticamente los mismos
+(como veremos luego, una tendencia generalizada hacia la no cooperación) y no existió una marcada posibilidad de un
+comportamiento diferente, es que se decidió estudiar, cómo es que el agente aprendió lo que luego
+ejecutó. Es decir, el análisis pasó de ser la búsqueda de cuáles parámetros conducían a ciertos comportamientos a cómo
+es que internamente el agente fue aprendiendo y por lo tanto actuando en consecuencia.
 
 ---
 
