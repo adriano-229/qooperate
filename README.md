@@ -142,13 +142,16 @@ code/
 │   ├── generate_yamls.py   # Genera la configuración de los experimentos mediante archivos .yaml  
 │   ├── run.py              # Ejecuta los experimentos y guarda datos y artefactos
 │   ├── figures.py          # Genera figuras comparativas a partir de los .parquets
+│   ├── learning_figures.py # Genera heatmaps de ΔQ y visitas de estados
+│   ├── learning_log.py     # Genera un log en Markdown con snapshots del aprendizaje
 │   └── viewer.py           # Replay interactivo de una corrida
 │
 ├── config/<exp>/           # Configuración .yaml de cada experimento
 │
 ├── results/
 │   ├── data/               # Datos .parquet y artefactos .npz de las corridas
-│   └── figures/            # Figuras
+│   ├── figures/            # Figuras
+│   └── logs/               # Logs en Markdown con snapshots del aprendizaje
 │    
 └── pyproject.toml          # Dependencias
 ```
@@ -213,7 +216,34 @@ El replay consume el parquet y sus `learning_*.npz` / `replay_*.npz` asociados. 
 UI interactiva contiene el grafo de la interacción y la evolución de los 3 gráficos ya descritos: de cooperación y gini,
 heatmap de ΔQ y heatmap de visitas de estados.
 
----
+### 5) Log de aprendizaje en CSV
+
+```bash
+python experiments/learning_log.py <data_parquet1> [<data_parquet2> ...]
+python experiments/learning_log.py --snapshots 8 <data_parquet1>
+```
+
+`learning_log.py` reutiliza los mismos artefactos que `learning_figures.py`/`viewer.py` (`<stem>.parquet` +
+`learning_<stem>.npz`), sin volver a correr la simulación ni tocar su formato. Por cada parquet genera un archivo
+`results/logs/<prefijo>/learning_log_<stem>.csv` con una tabla en formato CSV (separador punto y coma `;` y coma decimal
+`,` : una fila por estado (decodificado igual que en los heatmaps) y una
+columna por snapshot (por defecto 5, equiespaciados entre 0% y 100% de las rondas, mapeados al checkpoint disponible más
+cercano, y excluyendo el 0%; configurable con `--snapshots`).
+
+Cada snapshot genera tres columnas:
+
+- **ΔQ**: Q (s,C) - Q (s,D)
+- **F**: frecuencia relativa de visitas del estado en ese checkpoint, V (s)/sum (V)
+- **P**: ΔQ × F, una medida de cuánto "pesa" ese ΔQ según la frecuencia de visita del estado
+
+**Estructura del CSV:**
+
+```
+Estado;25%_ΔQ;25%_F;25%_P;50%_ΔQ;50%_F;50%_P;75%_ΔQ;75%_F;75%_P;100%_ΔQ;100%_F;100%_P
+(0,0,0,0);x;x;x;x;x;x;x;x;x;x;x;x
+(0,0,0,1);x;x;x;x;x;x;x;x;x;x;x;x
+...
+```
 
 ## Referencias
 
