@@ -237,104 +237,55 @@ amplificar. El resultado de E1 es consistente con que ese mecanismo, efectivamen
 
 ### 4.3. E2 — Tasa de aprendizaje $\alpha$
 
-*(Se usan las tres corridas con $\alpha=0.1$, $\alpha=0.2$ y $\alpha=0.5$; los nombres de archivo `e2_alpha01`,
-`e2_alpha02`, `e2_alpha05` corresponden, respectivamente, a $\alpha=0.1$, $0.2$ y $0.5$ — la cifra en el nombre es la
-representación en string del valor sin el punto decimal, no el valor mismo.)*
-
-En los tres casos el atractor final es el mismo, $(1,1,0,0)$ con $\Delta Q<0$. Lo que cambia con $\alpha$ es qué tan
-temprano y qué tan fuerte se concentra la dinámica ahí. La entropía de la distribución $F (s)$ —qué tan repartidas
-están las visitas entre estados— resume esto mejor que cualquier porcentaje puntual:
+En los tres valores analizados ($\alpha=0.1$, $0.2$ y $0.5$), el estado dominante al final es $(1,1,0,0)$ y
+su $\Delta Q$ es negativo. La diferencia está principalmente en la velocidad de concentración:
 
 | $\alpha$ | Entropía 33 % | Entropía 67 % | Entropía 100 % | $F(1,1,0,0)$ en 33 %/67 %/100 %     |
 |----------|---------------|---------------|----------------|-------------------------------------|
-| 0.1      | 3.48 bits     | 3.11 bits     | 2.40 bits      | (no está en el top-3) / 0.37 / 0.56 |
-| 0.2      | 2.98 bits     | 2.16 bits     | 1.50 bits      | 0.36 / 0.65 / 0.74                  |
-| 0.5      | 1.71 bits     | 1.21 bits     | 0.74 bits      | 0.71 / 0.82 / 0.86                  |
+| 0.1      | 3.48          | 3.11          | 2.40           | (no está en el top-3) / 0.37 / 0.56 |
+| 0.2      | 2.98          | 2.16          | 1.50           | 0.36 / 0.65 / 0.74                  |
+| 0.5      | 1.71          | 1.21          | 0.74           | 0.71 / 0.82 / 0.86                  |
 
-![entropia_alpha_epsilon.png](figs/entropia_alpha_epsilon.png)
+Con $\alpha=0.5$, la concentración aparece ya en el primer checkpoint, mientras que con $\alpha=0.1$ el proceso es más
+gradual. Esto es esperable: un $\alpha$ mayor hace que cada experiencia modifique más rápidamente los valores $Q$, por
+lo que la política se define antes. Lo importante es que la dirección aprendida no cambia: $\alpha$ modifica la
+velocidad de aprendizaje, pero no la política hacia la que converge el sistema.
 
-Con $\alpha=0.5$ la concentración ya está prácticamente resuelta en el primer checkpoint (F=0.71 al 33 %, con solo 12
-de los 36 estados visitados alguna vez con frecuencia apreciable). Con $\alpha=0.1$, en cambio, el 33 % todavía
-muestra una distribución amplia (14 estados activos, $(1,1,0,0)$ ausente del top-3) y recién en el tramo final se
-consolida. Esto es exactamente lo que se espera de la regla de actualización: un paso de aprendizaje mayor separa
-$Q (s,C)$ de $Q (s,D)$ más rápido a partir de las mismas experiencias, la política $\epsilon$-greedy deja de tener
-empates antes, y el comportamiento (y por lo tanto la distribución de estados que efectivamente se visitan) se fija
-antes. No es un hallazgo nuevo sobre cooperación, es el mecanismo de Q-Learning funcionando como está definido — y
-por eso no lo tratamos como tal más allá de constatarlo con números.
-
-Lo que sí vale la pena remarcar, porque no es automático, es que **la dirección de la política no cambia con
-$\alpha$**: los tres valores llevan al mismo estado dominante con el mismo signo de $\Delta Q$. Un $\alpha$ mayor no
-"encuentra" una salida cooperativa más rápido ni la evita; simplemente cristaliza más rápido la misma salida no
-cooperativa. La distinción entre velocidad de aprendizaje y política aprendida, que es la que pide separar el
-análisis, queda clara acá: cambia lo primero, no lo segundo.
-
-Usando $P (s)=\Delta Q (s)\cdot F (s)$ sobre la corrida de $\alpha=0.1$ en el checkpoint final se ve el punto de la
-Sección 3.2 con números concretos:
-
-| Estado    | $\Delta Q$ | $F$  | $P$       |
-|-----------|------------|------|-----------|
-| (1,1,0,0) | −0.8       | 0.56 | **−0.47** |
-| (1,0,0,1) | −3.5       | 0.02 | −0.07     |
-| (0,0,1,1) | −2.0       | 0.03 | −0.07     |
-| (1,0,1,1) | −2.3       | 0.03 | −0.07     |
-
-$(1,0,0,1)$ tiene una preferencia por desertar más de cuatro veces más fuerte que $(1,1,0,0)$, pero como se visita
-casi 30 veces menos, su aporte a $P$ es comparable al de estados con $\Delta Q$ mucho más moderado. El comportamiento
-agregado de la población está gobernado por unos pocos estados frecuentes con $\Delta Q$ moderado, no por los
-estados con la preferencia más extrema.
+La métrica $P (s)=\Delta Q (s)F (s)$ también muestra que la relevancia de un estado depende de su frecuencia.
+En $\alpha=0.1$ al 100 %, $(1,1,0,0)$ tiene $\Delta Q=-0.8$ y $F=0.56$, dando $P=-0.47$. Otros estados presentan
+preferencias mucho más negativas, pero sus frecuencias son cercanas a cero y, por tanto, tienen poca influencia sobre el
+comportamiento agregado.
 
 ### 4.4. E3 — Exploración $\epsilon$
 
-*(Se usan $\epsilon=0.05, 0.1, 0.2, 0.5$; archivos `e3_epsilon_005`, `_01`, `_02`, `_05`.)*
+Este experimento muestra un comportamiento no monótono. La concentración de visitas no aumenta simplemente al
+reducir $\epsilon$:
 
-Acá aparece el resultado menos trivial de los cinco experimentos. La entropía de $F (s)$ **no** decrece
-monótonamente con el tiempo en todos los casos, y tampoco decrece monótonamente al variar $\epsilon$:
+| $\epsilon$ | Entropía 33 % | Entropía 67 % | Entropía 100 % | $F$ máxima en 100 % |
+|------------|---------------|---------------|----------------|---------------------|
+| 0.05       | 3.32          | 3.42          | 3.27           | 0.28 — $(1,1,0,0)$  |
+| 0.1        | 3.48          | 3.11          | 2.40           | 0.56 — $(1,1,0,0)$  |
+| 0.2        | 2.98          | 2.31          | 1.81           | 0.66 — $(1,1,0,0)$  |
+| 0.5        | 3.07          | 3.10          | 3.05           | 0.26 — $(1,1,0,1)$  |
 
-| $\epsilon$ | Entropía 33 % | Entropía 67 % | Entropía 100 % | $F$ máxima en 100 %                                  |
-|------------|---------------|---------------|----------------|------------------------------------------------------|
-| 0.05       | 3.32          | 3.42          | 3.27           | 0.28 — $(1,1,0,0)$                                   |
-| 0.1        | 3.48          | 3.11          | 2.40           | 0.56 — $(1,1,0,0)$                                   |
-| 0.2        | 2.98\*        | 2.31          | 1.81           | 0.66 — $(1,1,0,0)$                                   |
-| 0.5        | 3.07          | 3.10          | 3.05           | 0.26 — $(1,1,0,1)$ (con $(1,1,0,0)$ muy cerca, 0.22) |
+Con $\epsilon=0.1$ y $0.2$ la distribución se concentra progresivamente, mientras que con $0.05$ y $0.5$ permanece más
+dispersa durante el horizonte observado. El máximo de concentración aparece en $\epsilon=0.2$, por lo que la relación
+entre exploración y concentración no resulta monótona.
 
-\* nota: el archivo de $\epsilon=0.1$ (`e3_epsilon_01`) y el de $\alpha=0.1$ (`e2_alpha01`) corresponden a la misma
-configuración base y coinciden en sus valores, como era de esperar por diseño del experimento; el 2.98 de la fila de
-$\epsilon=0.2$ al 33 % coincide con el mismo checkpoint de $\alpha=0.2$ por la misma razón (ambos son la corrida de
-referencia con esos parámetros).
+Los datos permiten identificar este patrón, pero no determinar una causa única: cada configuración utiliza una sola
+semilla y los checkpoints representan un horizonte acotado. Una interpretación plausible es que una exploración muy baja
+puede dificultar la propagación inicial de las preferencias aprendidas, mientras que una exploración muy alta mantiene
+una variabilidad considerable en las acciones. Esta explicación debe considerarse una hipótesis y no una conclusión
+definitiva.
 
-Con $\epsilon=0.05$ y con $\epsilon=0.5$ la entropía se mantiene prácticamente plana a lo largo de toda la corrida
-—no hay una tendencia clara a concentrarse dentro del horizonte simulado—, mientras que con $\epsilon=0.1$ y
-$\epsilon=0.2$ cae de forma sostenida y termina en valores claramente más bajos. El máximo de concentración se da en
-$\epsilon=0.2$ (66 % de las visitas en un solo estado hacia el final), no en el extremo de menor exploración.
-
-Esto no es lo que se esperaría de una lectura simplista de "menos exploración, más rápido converge": con
-$\epsilon=0.05$ el sistema queda, dentro de este horizonte de rondas, tan disperso como con $\epsilon=0.5$, pese a
-que la lógica de $\epsilon$-greedy sugeriría que menos ruido exploratorio debería fijar antes la política. Los datos
-alcanzan para describir el patrón —no monótono, con un máximo de concentración en un rango intermedio de
-$\epsilon$— pero no alcanzan para aislar una única causa con una sola semilla por configuración. Una hipótesis
-consistente con el mecanismo del modelo es que, con $\epsilon$ muy bajo, la tabla $Q$ se inicializa en cero para
-todos los estados y las primeras acciones se deciden por desempate aleatorio (no por $\epsilon$) hasta que aparece la
-primera separación de $Q (s,C)$ y $Q (s,D)$; con poca exploración adicional, esa separación tarda en propagarse al
-conjunto de la población —cada agente aprende de a poco y también los vecinos de los que depende su propio estado
-están cambiando—, de modo que el sistema tarda más en estabilizar un comportamiento compartido del que dependen los
-$s_1,s_3$ de todos. En el extremo opuesto, con $\epsilon=0.5$ la mitad de las acciones se sortean sin mirar $Q$
-en cada ronda, lo cual reinyecta variabilidad en $s_1,s_2,s_3$ de forma permanente y evita que cualquier estado
-capture una fracción grande de las visitas, sin importar cuánto haya aprendido la tabla $Q$. Esta explicación es
-plausible con los datos disponibles, pero no puede confirmarse sin corridas adicionales con más semillas: se señala
-como interpretación, no como conclusión cerrada.
-
-Lo que sí está bien sostenido por los datos, en los cuatro valores de $\epsilon$: cuando un estado gana frecuencia,
-su $\Delta Q$ ya es negativo desde el primer checkpoint disponible (ver 4.7); $\epsilon$ regula si esa preferencia
-llega a traducirse en concentración de visitas, no si la preferencia aprendida cambia de signo.
+En los cuatro valores, cuando un estado alcanza alta frecuencia su $\Delta Q$ es negativo. Así, $\epsilon$ afecta
+principalmente cuánto se consolida una política aprendida en el comportamiento observado, no la dirección de esa
+preferencia.
 
 ### 4.5. E4 — Profundidad de vecindario $\rho$
 
-Ampliar $\rho$ (de vecinos directos a vecinos hasta distancia 2 o 4 vía BFS) no revierte la deserción: en las tres
-corridas $(1,1,0,0)$ sigue siendo el estado dominante y con $\Delta Q$ negativo. Lo que cambia es qué tan rápido y
-qué tan fuerte se concentra ahí la dinámica, y en este caso el efecto es más marcado que el de $\alpha$ en el mismo
-rango de checkpoints:
-
-![funnel_rho_representacion.png](figs/funnel_rho_representacion.png)
+Aumentar $\rho$ tampoco cambia la dirección del aprendizaje: $(1,1,0,0)$ sigue siendo el estado dominante y
+mantiene $\Delta Q<0$.
 
 | $\rho$ | $F(1,1,0,0)$ en 33 % | 67 % | 100 % |
 |--------|----------------------|------|-------|
@@ -342,24 +293,14 @@ rango de checkpoints:
 | 2      | 0.13                 | 0.53 | 0.67  |
 | 4      | 0.24                 | 0.60 | 0.71  |
 
-Con $\rho=1$, al 33 % ni siquiera aparece $(1,1,0,0)$ en el top-3 (los tres estados más visitados son variantes de
-$(1,1,\cdot,\cdot)$ con $s_3,s_4$ distintos); con $\rho=4$ ya arranca con $F=0.24$ en ese mismo checkpoint. El
-mecanismo más directo para explicar esto está en la propia definición de $s_1$ y $s_3$: son fracciones calculadas
-sobre el conjunto de vecinos que da `build_adjacency_list(rho)`. Con $\rho=1$ ese conjunto puede ser chico (grado
-$k=8$); con $\rho=4$ se agranda considerablemente vía BFS, y una fracción calculada sobre una muestra más grande
-tiene menos varianza ronda a ronda. En otras palabras: aumentar $\rho$ no cambia *qué* mide el estado, cambia *cuántos
-vecinos* entran en el promedio, y una muestra más grande estabiliza antes la lectura de $s_1$ y $s_3$ para
-cada agente. Este es un efecto esperable de reducción de varianza por tamaño de muestra, no evidencia de un mecanismo
-nuevo de cooperación o de deserción.
+El efecto principal es una concentración más rápida al aumentar $\rho$. Esto se explica porque $s_1$ y $s_3$ se calculan
+sobre un conjunto mayor de vecinos: al incluir más agentes, las fracciones observadas presentan menor variación entre
+rondas y el estado se vuelve más estable.
 
-Lo relevante para el argumento del informe es lo que **no** cambia: $\rho$ le da al agente más información *espacial*
-—de más vecinos— pero sigue siendo información *agregada*, no identifica a ningún vecino en particular. Ampliar el
-radio de la muestra no es lo mismo que ampliar el tipo de información. Un agente con $\rho=4$ sabe con más precisión
-"qué fracción de mi entorno extendido coopera", pero sigue sin poder saber "el vecino A cooperó conmigo la vez
-pasada, el vecino B no". Es justamente esa distinción la que, según la Proposición 6 de Axelrod, hace falta para que
-una estrategia pueda discriminar entre cooperadores y desertores e invadir una población de ALL D. El resultado de
-E4 —más información espacial, misma dirección de la política, mayor velocidad de consolidación— es consistente con
-que agregar radio sin agregar discriminación individual no alcanza.
+Sin embargo, ampliar $\rho$ aumenta la cantidad de información espacial sin cambiar su naturaleza. El agente obtiene una
+estimación más amplia de la cooperación de su entorno, pero sigue sin distinguir qué vecino cooperó o desertó
+individualmente. Por ello, el aumento del radio no introduce el mecanismo de reciprocidad individual discutido por
+Axelrod.
 
 ### 4.6. E5 — Representación del estado
 
@@ -414,97 +355,41 @@ deserción, ese tipo de vecindario deja de observarse, así que la preferencia a
 irrelevante para el comportamiento agregado porque nadie vuelve a pasar por ahí. Esto es exactamente lo que motiva
 usar $P (s)$ en lugar de $\Delta Q (s)$ solo: son estados con "preferencia fuerte, importancia nula".
 
-### 4.8. Síntesis y relación con Axelrod
-
-Los cinco experimentos coinciden en el resultado cualitativo (deserción) y difieren en la dinámica con la que se
-llega ahí:
-
-| Experimento         | Qué cambia con el parámetro                                               | Qué NO cambia                                 |
-|---------------------|---------------------------------------------------------------------------|-----------------------------------------------|
-| E1 (topología)      | Casi nada — mismo $F$ final (~55–57 %), mismo signo de $\Delta Q$         | Dirección de la política                      |
-| E2 ($\alpha$)       | Velocidad de consolidación (entropía cae antes y más con $\alpha$ alto)   | Estado dominante, signo de $\Delta Q$         |
-| E3 ($\epsilon$)     | Grado de concentración, de forma no monótona (máximo en rango intermedio) | Signo de $\Delta Q$ en los estados frecuentes |
-| E4 ($\rho$)         | Velocidad y fuerza de la concentración (mayor muestra → menor varianza)   | Identidad del atractor, signo de $\Delta Q$   |
-| E5 (representación) | Granularidad / dispersión entre más estados                               | Signo de $\Delta Q$ en el estado dominante    |
-
-Ningún parámetro de los estudiados cambia la dirección de la política aprendida. Esto es consistente con la
-Proposición 5 de Axelrod: frente a una población que deserta, no cooperar es lo que más conviene individualmente
-($P>S$), así que el aprendizaje —que está guiado exactamente por la recompensa observada— refuerza la deserción una
-vez que esta se instala, sin importar la velocidad ($\alpha$), el ruido exploratorio ($\epsilon$), el alcance
-espacial ($\rho$) o la granularidad de la representación (E5). Lo que sí distingue a estos parámetros entre sí es
-qué tan rápido y qué tan fuerte se llega a esa concentración, algo que E2 y E4 muestran con más claridad que E1 y
-E5, y que E3 muestra de forma no monótona.
-
-La pregunta de fondo, sin embargo, no es solo si el modelo aprende a desertar —era razonable esperarlo, dado que
-$P>S$ hace que ALL D sea colectivamente estable— sino si el diseño del agente le daba, siquiera en principio, una
-vía para no hacerlo. La Proposición 6 de Axelrod es explícita sobre qué hace falta para invadir una población de
-ALL D: una estrategia capaz de distinguir entre quienes reciprocan y quienes no, y de cooperar selectivamente con
-los primeros. El estado de nuestros agentes, en su representación más rica (S1234), agrega $s_1$ y $s_3$ sobre todo
-el vecindario y no distingue individuos; $s_2$ y $s_4$ describen al propio agente, no al otro. Ningún experimento de
-E1 a E5 modifica esta característica estructural — ni la topología, ni $\alpha$, ni $\epsilon$, ni $\rho$, ni el
-tamaño de la representación introducen memoria diádica. Por eso el resultado de "deserción robusta ante cambios de
-parámetros" no debería sorprender tanto como "no logramos que coopere", sino leerse más precisamente como "el agente
-nunca tuvo, en ninguna de estas configuraciones, la información mínima que la teoría identifica como necesaria para
-sostener reciprocidad". Esto no es una crítica al diseño experimental sino una interpretación de por qué barrer estos
-parámetros específicos no iba a alcanzar: son todos parámetros que afectan *cuánto* y *cuán rápido* se aprende, o
-*cuánta* información agregada hay disponible, pero ninguno cambia el *tipo* de información (agregada vs. diádica) que
-define el estado.
-
-Vale una aclaración sobre $\gamma=0.9$: no debe leerse este valor como "equivalente al $w \geq 2/3$ de la
-Proposición 2" en el sentido de que el sistema *debería* cooperar por tener un descuento alto. $w$ en Axelrod pesa el
-futuro dentro de una estrategia que ya es recíproca; $\gamma$ en Q-Learning pesa el futuro dentro de la regla de
-actualización de una tabla de valores que aprende de la experiencia. Que $\gamma$ sea alto hace que el agente valore
-recompensas futuras al estimar $Q$, pero no le da, por sí solo, la capacidad de condicionar su acción a la identidad
-o historia de un vecino puntual. Son mecanismos distintos y no equivalentes; el proyecto no varió $\gamma$
-sistemáticamente, así que esto queda como lectura teórica y no como resultado experimental.
-
 ---
 
-## 5. Conclusiones finales
+## 5. Conclusiones
 
 Bajo las configuraciones estudiadas (tres topologías, tres tasas de aprendizaje, cuatro niveles de exploración, tres
 profundidades de vecindario y cuatro representaciones de estado), la población converge de forma robusta hacia la
 deserción mutua, representada por el estado $(1,1,0,0)$ (vecindario mayoritariamente desertor, autor desertando,
 cooperación y recompensa recientes bajas) con $\Delta Q$ negativo. Ninguna de las variaciones probadas cambia esa
 dirección; todas modifican, en cambio, la velocidad y el grado de concentración con que se llega a ella, y en el
-caso de $\epsilon$ ese efecto es no monótono (máxima concentración en un rango intermedio, no en los extremos).
+caso de $\epsilon$ ese efecto no es monótono.
 
-El análisis temporal —usando $F (s)$, $\Delta Q (s)$ y $P (s)$ en tres checkpoints relativos, en vez de una única
-lectura
-del final de la corrida— permitió dos observaciones que no aparecían al mirar solo el resultado final: primero, que
+El análisis temporal —usando $F (s)$, $\Delta Q (s)$ y $P (s)$ en tres checkpoints permitió ver dos observaciones:
+primero, que
 la preferencia por desertar en el estado que termina dominando ya está fuertemente instalada antes de que ese estado
 concentre visitas, es decir, el aprendizaje de la preferencia precede a la consolidación del comportamiento
-poblacional, no al revés; segundo, que buena parte del espacio de estados (en particular los que describen
+poblacional; segundo, que buena parte del espacio de estados (en particular los que describen
 vecindarios mayoritariamente cooperadores) deja de visitarse a medida que avanza la simulación, con lo cual cualquier
-preferencia aprendida ahí —cooperativa o no— se vuelve irrelevante para el comportamiento agregado.
+preferencia aprendida ahí se vuelve irrelevante para el comportamiento agregado.
 
 Interpretado con el marco de Axelrod, este resultado es coherente con la Proposición 5 (ALL D es colectivamente
 estable) y explicable por la Proposición 6 (invadir esa estabilidad requiere discriminar entre vecinos, algo que la
 representación de estado usada —aun en su versión más rica— no permite, porque agrega la información del vecindario
 en fracciones y promedios en lugar de conservar historia por vecino). Los experimentos de topología y de profundidad
-de vecindario amplían la cantidad de información espacial disponible sin cambiar su naturaleza agregada, y no alteran
+de vecindario amplían la cantidad de información espacial disponible sin cambiar su naturaleza, y no alteran
 el resultado cualitativo; el experimento de representación de estado sí cambia cuánta granularidad tiene el agente
-sobre su propia situación, pero tampoco introduce memoria diádica, y tampoco cambia el resultado cualitativo.
+sobre su propia situación, pero tampoco introduce memoria específica, y por lo tanto tampoco cambia el resultado.
 
-**Limitaciones.** Cada configuración corresponde a una única semilla (la calibración E0 mostró curvas de cooperación
-y Gini muy similares entre semillas, lo que motivó usar una sola semilla en los experimentos posteriores, pero eso no
-garantiza que patrones más finos —como la no monotonicidad observada en E3— sean robustos a la semilla). Los logs
-solo permiten reconstruir tres puntos relativos por corrida (33 %/67 %/100 % de las rondas), sin número de ronda
-absoluto, así que no es posible verificar si el checkpoint final corresponde a un régimen efectivamente estacionario;
-de hecho, en $\epsilon=0.05$ y $\epsilon=0.5$ la entropía de $F (s)$ todavía no muestra una tendencia clara de caída al
-llegar al último checkpoint disponible, lo que sugiere que esas corridas podrían no haber terminado de consolidarse
-dentro del horizonte simulado.
 
 **Trabajo futuro.** El punto que se desprende más directamente del análisis es que, si el objetivo es estudiar si
-puede emerger cooperación en este tipo de sistema, hace falta modificar la naturaleza de la información disponible
+puede emerger cooperación en este tipo de sistema multi-agente, hace falta modificar la naturaleza de la información
+disponible
 para el agente y no solo su cantidad: algo que le permita condicionar su acción a la identidad o al historial
 específico de cada vecino (por ejemplo, mantener un registro de acción-por-vecino en vez de una fracción agregada),
 que es precisamente lo que la Proposición 6 de Axelrod señala como necesario para que una estrategia discriminante
-pueda invadir una población de desertores. También sería necesario, antes de ampliar el barrido de parámetros,
-correr varias semillas por configuración —en particular para E3— y extender el horizonte de simulación en los casos
-donde la entropía de $F (s)$ no muestra una tendencia clara al final de la corrida, para poder distinguir con más
-confianza una dinámica genuinamente no monótona de una todavía en transición.
-
+pueda invadir una población de desertores.
 ---
 
 ## Bibliografía
