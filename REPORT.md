@@ -15,20 +15,20 @@ computacionales de estrategias y mostró que la reciprocidad —responder a lo q
 cooperación cuando el juego se repite lo suficiente.
 
 Este proyecto traslada ese problema a una población de agentes conectados por una red, que juegan el IPD con sus
-vecinos y aprenden su comportamiento mediante Q-Learning en lugar de seguir una estrategia fija como TIT FOR TAT. A
+vecinos y aprenden su comportamiento mediante Q-Learning en lugar de seguir una estrategia fija. A
 diferencia de los torneos de Axelrod, aquí nadie programa una estrategia: el agente construye, ronda a ronda, una
-tabla de valores $Q (s,a)$ a partir de lo que efectivamente le pasó, donde $s$ resume información agregada de su
-vecindario (no la identidad ni la historia de cada vecino en particular).
+tabla de valores $Q (s,a)$ a partir de lo que efectivamente le pasó, donde $s$ resume información de su vecindario.
 
-La primera etapa del proyecto buscaba condiciones —topología, información local— bajo las cuales emergiera
-cooperación. Todos los experimentos de esa etapa dieron el mismo resultado cualitativo: la población converge hacia
-la deserción. Esto motivó una segunda etapa, que es el foco real de este informe: en lugar de preguntar *qué
-configuración coopera más*, preguntamos *cómo aprende el agente lo que termina haciendo*, usando la diferencia
+La primera etapa del proyecto tuvo como objetivo encontrar *condiciones bajo las cuales emergiera
+cooperación*. Todos los experimentos de esa etapa dieron el mismo resultado cualitativo: la población converge hacia
+la deserción. Esto motivó una segunda etapa: en lugar de buscar tales condiciones nos preguntamos *cómo aprende el
+agente lo que termina haciendo*, usando la diferencia
 $\Delta Q (s) = Q (s,C) - Q (s,D)$ y la frecuencia de visita $F (s)$ de cada estado a lo largo del entrenamiento.
 
-El resto del informe se organiza así: la Sección 2 repasa el marco teórico necesario (Dilema del Prisionero,
-Q-Learning, y las condiciones de Axelrod para la estabilidad de una estrategia), con énfasis en la comparación entre
-la información que usa TIT FOR TAT y la que usa nuestro agente. La Sección 3 describe el sistema, las métricas y el
+El resto del informe se organiza así: la Sección 2 repasa el marco teórico necesario, con énfasis en la comparación
+entre
+la información que disponible de una estrategia del torneo original y la que usa nuestro agente. La Sección 3 describe
+el sistema, las métricas y el
 diseño de los cinco experimentos (E1–E5). La Sección 4 analiza los resultados, priorizando la evolución temporal del
 aprendizaje —qué estados importan en cada etapa, cuándo se separa $\Delta Q$ de $F$, qué es esperable y qué no— sobre
 los valores finales. La Sección 5 cierra con las conclusiones y las limitaciones del diseño experimental.
@@ -47,78 +47,80 @@ $$
 
 con la matriz canónica usada en el proyecto: $T=5$ (tentación), $R=3$ (recompensa mutua), $P=1$ (castigo mutuo),
 $S=0$ (pago del cooperador explotado). Desertar domina individualmente a cooperar sea cual sea la acción del otro
-jugador, pero la deserción mutua ($P$) es peor para ambos que la cooperación mutua ($R$). Cuando el juego se repite
-(IPD), la acción de hoy puede condicionar la respuesta del otro mañana, y ahí aparece el espacio para la reciprocidad.
+jugador, pero la deserción mutua $P$ es peor para ambos que la cooperación mutua $R$. Cuando el juego se repite (como en
+el caso de un IPD), la acción de hoy puede condicionar la respuesta del otro mañana, y ahí aparece el espacio para la
+reciprocidad.
 
-Axelrod organizó torneos computacionales de estrategias para el IPD y encontró que TIT FOR TAT —cooperar en la
+Axelrod organizó torneos computacionales de estrategias para el IPD y encontró que la estrategia TIT FOR TAT —cooperar
+en la
 primera ronda y después repetir la última acción del oponente— ganó ambas rondas del torneo pese a competir contra
 reglas mucho más sofisticadas. El resultado no se debe a que TIT FOR TAT "gane" cada partida individual (de hecho
 nunca obtiene más puntos que su oponente en una partida dada), sino a que es *nice* (nunca deserta primero),
-*provocable* (responde a una deserción) y *forgiving* (no queda anclada en un castigo indefinido). Este resultado es
-la referencia conceptual central del informe, porque exige memoria del comportamiento **de ese oponente en
-particular**.
+*provocable* (responde a una deserción) y *forgiving* (no queda anclada en un castigo indefinido).
 
 ### 2.2. Condiciones de estabilidad: ¿qué hace falta para que la cooperación se sostenga?
 
-Dos resultados de Axelrod son especialmente relevantes acá.
+Dos resultados de Axelrod son especialmente relevantes para este proyecto.
 
-**Proposición 5 (ALL D es siempre colectivamente estable).** Si toda la población deserta, ningún individuo aislado
-mejora cooperando: cooperar en ese entorno da $S$, desertar da $P$, y $P>S$. Una estrategia cooperativa aislada no
-puede invadir una población que ya defecciona.
+Para entender las Proposiciones 5 y 6 es necesario introducir dos conceptos, el de una población ALL D, y el de
+invasión:
 
-**Proposición 6 (invasión por clusters).** Lo que sí puede invadir ALL D es un grupo de agentes que usan una
-estrategia *maximally discriminating*: coopera con su propio tipo y dejan de cooperar con quien no reciproca (TIT FOR
-TAT es el ejemplo). Para esto la estrategia necesita distinguir *con quién* está jugando y *qué hizo antes*.
+- ALL D: dícese de una población en la que todos sus individuos desertan. Esta población tiene un beneficio típico $P$.
 
-**Proposición 2 (estabilidad de TIT FOR TAT).** Depende del factor de descuento $w$, que pondera cuánto importa el
-futuro frente al presente:
+- Invasión: una población (invasora) puede *invadir* a una población (invadida) si la pobación invasora obtiene
+  beneficio mayor que el típico de la población invadida.
 
-$$
-w \geq \max\left (\frac{T-R}{T-P}, \frac{T-R}{R-S}\right) = \max\left (\frac{2}{4},\frac{2}{3}\right) = \frac{2}{3}
-$$
+**Proposición 5 (ALL D no es invadible por una población compuesta por un sólo individuo).** Ningún individuo aislado
+puede invadir a ALL D, ya que cooperar en ese entorno da $S$, desertar da $P$, y $P>S$.
 
-para $T=5,R=3,P=1,S=0$. Este resultado presupone que la estrategia en cuestión ya implementa reciprocidad (TIT FOR TAT);
-no dice nada sobre si un $\gamma$ alto en Q-Learning produce, por sí solo, ese comportamiento. Son
-cosas distintas: $w$ pesa las recompensas futuras dentro de una estrategia dada, $\gamma$ pesa las recompensas
-futuras dentro de la regla de actualización de Q. Retomamos esta distinción en la Sección 4.8.
+**Proposición 6 (ALL D es invadible por una población discriminante).** Lo que sí puede invadir ALL D es un grupo de
+agentes que usan una
+estrategia *maximally discriminating*: coopera con su propio tipo y dejan de cooperar con quien no tiene una actitud
+recíproca. Para esto la estrategia necesita distinguir *con quién* está jugando y *qué hizo antes*.
+
+En resumen, para que tenga lugar una invasión de una población cooperativa sobre otra, esta primera debe poder
+*discriminar* con quién está interactuando y cuál fue el historial de la interacción, esto con el fin de poder aplicar
+reciprocidad con los propios, y no con los ajenos. Tales condiciones, como veremos durante el desarrollo de los
+experimentos y resultados de la primera etapa de este trabajo, no fueron satisfechas.
 
 ### 2.3. Q-Learning
 
-El agente actualiza
+El agente actualiza su tabla $Q (s, a)$ con la regla
 
 $$
 Q (s,a) \leftarrow Q (s,a) + \alpha\big[r + \gamma\max_{a'}Q (s',a') - Q (s,a)\big],
 $$
 
-y selecciona acciones con una política $\epsilon$-greedy: explora con probabilidad $\epsilon$, y en caso contrario
-elige $\arg\max_a Q (s,a)$ (con desempate aleatorio si $Q (s,C)=Q (s,D)$, lo que ocurre para todo estado en la ronda 0,
-porque la tabla se inicializa en cero). La medida $\Delta Q (s) = Q (s,C)-Q (s,D)$ resume qué acción prefiere el agente
+donde $\alpha$ es la tasa de aprendizaje, $\gamma$ el factor de descuento, $r$ la recompensa inmediata y $(s, a)$ el par
+estado-acción.
+
+El agente selecciona acciones con una política $\epsilon$-greedy: explora con probabilidad $\epsilon$, y en caso
+contrario
+elige $\arg\max_a Q (s,a)$. La medida $\Delta Q (s) = Q (s,C)-Q (s,D)$ resume qué acción prefiere el agente
 en cada estado: negativa favorece `D`, positiva favorece `C`.
 
 ### 2.4. Aprendizaje multiagente no estacionario
 
 Cuando todos los agentes aprenden a la vez, cada uno modifica el entorno de los demás: la política de un vecino en la
 ronda $t$ no es la misma que en $t+1000$. Esto rompe los supuestos habituales de convergencia de Q-Learning para un
-único agente en un entorno fijo. Por eso el proyecto no busca "la política óptima" sino que caracteriza la dinámica
-adaptativa que efectivamente aparece.
+único agente en un entorno fijo. Por eso el proyecto no busca una política óptima sino encontrar los patrones para la
+emergencia de ciertos comportamientos.
 
-### 2.5. La pregunta de fondo: ¿alcanza la información del estado para reciprocidad?
+### 2.5. Estados, ¿fue suficiente la información del agente para lograr esa reciprocidad?
 
-El estado de cada agente se arma con:
+El estado $s$ de cada agente se arma con los siguientes cuatro subestados:
 
 * $s_1$: acción mayoritaria del vecindario en la ronda anterior,
 * $s_2$: última acción propia,
 * $s_3$: tasa de cooperación del vecindario,
 * $s_4$: recompensa media reciente propia.
 
-Ninguna de estas variables identifica a un vecino en particular ni conserva su historial individual. $s_1$ y $s_3$
+Nótese que ninguna de estas variables identifica a un vecino en particular ni conserva su historial individual. $s_1$
+y $s_3$
 son *promedios* del vecindario completo; $s_2$ y $s_4$ son propiedades del propio agente, no del oponente. Esto
-importa porque TIT FOR TAT no necesita saber "cuánta gente coopera alrededor", necesita saber "qué hizo *este*
-vecino la vez pasada" para poder recompensarlo o castigarlo específicamente. Un agente que agrega toda la información
-de su vecindario en una tasa de cooperación no puede, aunque quisiera, cooperar con el vecino que coopera y desertar
-con el que deserta si ambos conviven en el mismo vecindario: solo puede reaccionar al promedio. Esta es la diferencia
-estructural que vamos a usar para interpretar los resultados de E5 en particular, sin forzarla donde los datos no la
-sostienen.
+importa porque las estrategias discriminantes no necesitan saber "cuánta gente coopera alrededor", necesita saber "qué
+hizo *este*
+vecino la vez pasada" para poder recompensarlo o castigarlo específicamente.
 
 ---
 
@@ -126,88 +128,84 @@ sostienen.
 
 ### 3.1. El sistema
 
-QOOPERATE simula $N$ agentes sobre un grafo. En cada ronda: (1) cada agente calcula su estado a partir del historial
-de la ronda anterior, (2) elige acción con $\epsilon$-greedy, (3) juega el IPD con cada vecino y promedia el pago, (4)
-calcula el estado siguiente, y (5) actualiza $Q$. No hay una fase de entrenamiento separada de una fase de
-ejecución: se aprende y se actúa al mismo tiempo, ronda a ronda.
+Este proyecto simula $N$ agentes sobre un grafo. En cada ronda:
+
+1. cada agente calcula su estado a partir del historial de la ronda anterior,
+2. elige acción con $\epsilon$-greedy,
+3. juega el IPD con cada vecino y promedia el pago,
+4. calcula el estado siguiente y
+5. actualiza $Q$.
+
+Como es posible notar, no hay una fase de entrenamiento separada de una fase de ejecución, se aprende y se actúa al
+mismo tiempo.
 
 ### 3.2. Métricas
 
 A nivel colectivo se mide la tasa de cooperación $C_t$ y el índice de Gini $G$ de las recompensas. A nivel del
-aprendizaje interno —el foco de este informe— se registra, en checkpoints de la simulación, para cada uno de los
+aprendizaje interno se registra, en checkpoints de la simulación, para cada uno de los
 estados posibles:
 
-* $F (s) = V (s)/\sum_{s'} V (s')$: frecuencia relativa de visitas al estado (cuán importante es ese estado en la
-  dinámica observada);
-* $\Delta Q (s) = Q (s,C)-Q (s,D)$: qué acción prefiere el agente en ese estado;
-* $P (s) = \Delta Q (s)\cdot F (s)$: pondera la preferencia por la frecuencia con que efectivamente se visita el estado.
+* $F (s) = V (s)/\sum_{s'} V (s')$: frecuencia relativa de visitas al estado, para ver la importancia de cada estado
+* $\Delta Q (s) = Q (s,C)-Q (s,D)$: qué acción prefiere el agente en ese estado
+* $P (s) = \Delta Q (s)\cdot F (s)$: pondera la preferencia por la frecuencia con que efectivamente se visita el estado
 
-$P (s)$ es la métrica que evita confundir "estado con fuerte preferencia" con "estado relevante para el
-comportamiento global": un estado con $\Delta Q$ muy negativo pero $F \approx 0$ apenas mueve la aguja, mientras que
-un estado con $\Delta Q$ moderado y $F$ alto puede dominar el comportamiento agregado. En la Sección 4 se usa
-sistemáticamente esta lectura.
+### 3.3. Sobre la información contenida en los logs
 
-### 3.3. Qué información temporal ofrecen realmente los logs
+Cada corrida registra tres checkpoints, correspondientes al 33 %, 67 % y 100 % de las rondas
+simuladas. Los archivos no
+incluyen el número de ronda absoluto, solo la etiqueta porcentual, por lo que podemos hablar de puntos tempranos,
+intermedios y tardíos de cada corrida, además, a priori no podemos asumir que último checkpoint (el del 100 %) indique
+un estado estacionario, sin embargo, debido a las proposiciones previamente explicadas, los resultados de los
+experimentos no distaron de serlo.
 
-Cada corrida registra tres checkpoints, correspondientes aproximadamente al 33 %, 67 % y 100 % de las rondas
-simuladas (el script de logging toma 4 puntos equiespaciados entre 0 % y 100 % y descarta el 0 %). Los archivos no
-incluyen el número de ronda absoluto, solo la etiqueta porcentual. Esto tiene una consecuencia importante para el
-análisis: **podemos hablar de "temprano/intermedio/tardío" en términos relativos, pero no de "convergió en la ronda
-X"**, y no podemos asumir que el checkpoint del 100 % sea un estado estacionario — es, literalmente, el último punto
-que se registró dentro de un horizonte de simulación acotado, y en varias configuraciones (lo vamos a ver en E2 y en
-E3) la frecuencia de los estados todavía está cambiando en ese punto. Por eso, salvo que se indique explícitamente lo
-contrario, "100 %" se lee como "última medición disponible", no como "equilibrio".
+### 3.4. Representación del estado
 
-### 3.4. Representación del estado y espacio de estados
+A excepción del experimento E5, todos los demás tienen exactamente $2\times2\times3\times3=36$ estados. La
+interpretación de cada
+estado (con base en sus subestados) es la siguiente:
+a
+![states.png](code/report/states.png)
 
-Con $s_1,s_2 \in \{0,1\}$ y con `coop_n_divisions = reward_n_divisions = 2` (valor que se infiere de los datos: los
-archivos de todos los experimentos, salvo E5, tienen exactamente $2\times2\times3\times3=36$ estados, lo que fija
-$n_{s_3}=n_{s_4}=3$), los cortes de discretización son:
+En la siguiente figura podemos visualizar los mapas de calor de $\Delta Q (s)$ y $F (s)$ junto con la descripción
+específica de uno de los estados a modo de ejemplo.
 
-* $s_3$ (tasa de cooperación del vecindario, rango $[0,1]$): $s_3=0$ si $<33\%$, $s_3=1$ si $[33\%,67\%)$, $s_3=2$ si
-  $\geq 67\%$.
-* $s_4$ (recompensa media reciente, rango $[0,5]$ porque $T=5$ es el máximo pago posible): $s_4=0$ si $<1.67$,
-  $s_4=1$ si $[1.67,3.33)$, $s_4=2$ si $\geq 3.33$.
+![learning_e0_test_n100_seed107420369.jpg](code/report/learning_e0_test_n100_seed107420369.jpg)
 
-El estado $(1,1,0,0)$ —vecindario mayoritariamente desertor, autor desertó la última vez, cooperación del vecindario
-por debajo de 33 %, recompensa reciente por debajo de 1.67— describe, literalmente, la trampa de deserción mutua: es
-el estado que va a dominar buena parte del análisis de la Sección 4.
+El estado $(1,1,0,0)$ es el estado que va a dominar buena parte del análisis de los resultados.
 
-E5 reduce esta representación a subconjuntos de $(s_1,s_2,s_3,s_4)$: S1 usa solo $s_1$ (2 estados), S12 usa
-$(s_1,s_2)$ (4 estados), S123 usa $(s_1,s_2,s_3)$ (12 estados), S1234 es la representación completa (36 estados).
+En E5 se investiga específicamente cómo una reducción en la representación de estados a subconjuntos
+de $s_1,s_2,s_3,s_4$ afecta el comportamiento:
 
-### 3.5. Los cinco experimentos
+- $s_{1}$ usa $s_1$ (2 estados),
+- $s_{12}$ usa $s_1$ y $s_2$ (4 estados),
+- $s_{123}$ usa $s_1$, $s_2$ y $s_3$ (12 estados), y
+- $s_{1234}$ usa $s_1$, $s_2$, $s_3$ y $s_4$ (los 36 estados).
+
+### 3.5. Experimentos
 
 Todos parten de la configuración de calibración E0 (red Watts-Strogatz, $k=8$, $\gamma=0.9$, $\rho=1$, $N=100$,
-representación S1234, semilla única) y modifican una única dimensión por vez:
+representación $s_{1234}$) y modifican una única dimensión por vez:
 
-| Experimento | Variable                         | Valores analizados en este informe   |
-|-------------|----------------------------------|--------------------------------------|
-| E1          | Topología                        | Lattice, Watts-Strogatz, Erdős-Rényi |
-| E2          | Tasa de aprendizaje $\alpha$     | 0.1, 0.2, 0.5                        |
-| E3          | Exploración $\epsilon$           | 0.05, 0.1, 0.2, 0.5                  |
-| E4          | Profundidad de vecindario $\rho$ | 1, 2, 4                              |
-| E5          | Representación del estado        | S1, S12, S123, S1234                 |
+| Experimento | Variable                         | Valores analizados                       |
+|-------------|----------------------------------|------------------------------------------|
+| E1          | Topología                        | Lattice, Watts-Strogatz, Erdős-Rényi     |
+| E2          | Tasa de aprendizaje $\alpha$     | 0.1, 0.2, 0.5                            |
+| E3          | Exploración $\epsilon$           | 0.05, 0.1, 0.2, 0.5                      |
+| E4          | Profundidad de vecindario $\rho$ | 1, 2, 4                                  |
+| E5          | Representación del estado $s$    | $s_{1}$, $s_{12}$, $s_{123}$, $s_{1234}$ |
 
-Nota sobre E2 y E3: por instrucción del análisis, se excluyen del texto comparativo otros valores de $\alpha$/$\epsilon$
-que puedan existir en el proyecto (por ejemplo $\alpha=0.01$ o $\epsilon=0.01$); no se sacan conclusiones sobre ellos
-acá.
+En la siguiente figura podemos distinguir la naturaleza de las conexiones en cada topología, de izquierda a derecha: la
+red disminuye su nivel de clusterización reconectando las aristas aleatoriamente. En un principio, la elección de
+utilizar varias topologías estuvo motivada para analizar cómo esos niveles de segmentación y agrupamiento podían o no
+derivar en comportamientos cooperativos.
+
+![topologies.png](code/report/topologies.png)
 
 ---
 
-## 4. Análisis y discusión de resultados
+## 4. Análisis de resultados
 
-### 4.1. Cómo se leen las tablas de estados
-
-Cada estado se escribe $(s_1,s_2,s_3,s_4)$ (o el subconjunto correspondiente en E5). Los heatmaps de aprendizaje del
-proyecto (p. ej. `code/report/learning_e0_test_n100_seed107420369.jpg`, `code/report/states.png`) usan esta misma
-codificación de 36 filas. Cuando el texto dice "el estado $(1,1,0,0)$ domina", se refiere a que ese renglón concentra
-la mayor parte de las visitas registradas en ese checkpoint, no a que sea el único estado con $\Delta Q$ negativo:
-como se ve más abajo, prácticamente **todos** los estados con frecuencia apreciable tienen $\Delta Q<0$ en todos los
-experimentos. La pregunta relevante no es "¿hay algún estado cooperativo?" sino "¿qué estados concentran la masa de
-visitas, y cómo cambia eso en el tiempo?".
-
-### 4.2. E1 — Topología
+### 4.1. E1 — Topología
 
 Los tres experimentos (Lattice, Watts-Strogatz, Erdős-Rényi) muestran la misma trayectoria cualitativa. En el
 checkpoint temprano (33 %) las visitas están repartidas entre un grupo de estados $(1,1,\cdot,\cdot)$ —vecindario
@@ -235,7 +233,7 @@ de reciprocidad capaz de formar y proteger un cluster cooperador (Proposición 6
 amplificar. El resultado de E1 es consistente con que ese mecanismo, efectivamente, no está presente en el agente (ver
 4.8).
 
-### 4.3. E2 — Tasa de aprendizaje $\alpha$
+### 4.2. E2 — Tasa de aprendizaje $\alpha$
 
 En los tres valores analizados ($\alpha=0.1$, $0.2$ y $0.5$), el estado dominante al final es $(1,1,0,0)$ y
 su $\Delta Q$ es negativo. La diferencia está principalmente en la velocidad de concentración:
@@ -256,7 +254,7 @@ En $\alpha=0.1$ al 100 %, $(1,1,0,0)$ tiene $\Delta Q=-0.8$ y $F=0.56$, dando $P
 preferencias mucho más negativas, pero sus frecuencias son cercanas a cero y, por tanto, tienen poca influencia sobre el
 comportamiento agregado.
 
-### 4.4. E3 — Exploración $\epsilon$
+### 4.3. E3 — Exploración $\epsilon$
 
 Este experimento muestra un comportamiento no monótono. La concentración de visitas no aumenta simplemente al
 reducir $\epsilon$:
@@ -282,7 +280,7 @@ En los cuatro valores, cuando un estado alcanza alta frecuencia su $\Delta Q$ es
 principalmente cuánto se consolida una política aprendida en el comportamiento observado, no la dirección de esa
 preferencia.
 
-### 4.5. E4 — Profundidad de vecindario $\rho$
+### 4.4. E4 — Profundidad de vecindario $\rho$
 
 Aumentar $\rho$ tampoco cambia la dirección del aprendizaje: $(1,1,0,0)$ sigue siendo el estado dominante y
 mantiene $\Delta Q<0$.
@@ -302,26 +300,28 @@ estimación más amplia de la cooperación de su entorno, pero sigue sin disting
 individualmente. Por ello, el aumento del radio no introduce el mecanismo de reciprocidad individual discutido por
 Axelrod.
 
-### 4.6. E5 — Representación del estado
+### 4.5. E5 — Representación del estado
 
 Este es el experimento donde la variable manipulada sí cambia la granularidad del aprendizaje de forma directa,
 porque modifica cuántas situaciones distintas puede diferenciar el agente.
 
 | Representación | Estado dominante | $F$ en 33 % / 67 % / 100 % | $\Delta Q$ en 100 % |
 |----------------|------------------|----------------------------|---------------------|
-| S1             | (1)              | 0.93 / 0.96 / 0.98         | −1.1                |
-| S12            | (1,1)            | 0.69 / 0.82 / 0.86         | −1.0                |
-| S123           | (1,1,0)          | 0.38 / 0.65 / 0.75         | −0.9                |
-| S1234          | (1,1,0,0)        | 0.06 / 0.31 / 0.52         | −1.0                |
+| $s_{1}$        | (1)              | 0.93 / 0.96 / 0.98         | −1.1                |
+| $s_{12}$       | (1,1)            | 0.69 / 0.82 / 0.86         | −1.0                |
+| $s_{123}$      | (1,1,0)          | 0.38 / 0.65 / 0.75         | −0.9                |
+| $s_{1234}$     | (1,1,0,0)        | 0.06 / 0.31 / 0.52         | −1.0                |
 
-Con S1, el agente ni siquiera distingue su propia última acción: solo observa si el vecindario mayoritario cooperó o
+Con $s_{1}$, el agente ni siquiera distingue su propia última acción: solo observa si el vecindario mayoritario cooperó
+o
 no. Como con dos estados posibles y una población que rápidamente deja de cooperar mayoritariamente, casi todas las
 visitas terminan en el único estado "vecindario deserta", el resultado (F=0.98) es casi mecánico: no hay adónde más
 ir. A medida que se agregan $s_2$, $s_3$ y $s_4$, el espacio de estados crece y las visitas se reparten entre más
 combinaciones, así que el estado más visitado concentra una fracción menor del total (98 % → 86 % → 75 % → 52 %) sin
 que esto implique más cooperación: en los cuatro casos el estado dominante tiene $\Delta Q$ claramente negativo.
 
-Es importante no leer esta caída de 98 % a 52 % como "S1234 coopera más". Lo que muestra es que S1234 **distribuye el
+Es importante no leer esta caída de 98 % a 52 % como "$s_{1234}$ coopera más". Lo que muestra es que $s_{1234}$
+**distribuye el
 aprendizaje entre más contextos** — distingue, por ejemplo, entre desertar habiendo tenido buena o mala recompensa
 reciente — pero ninguno de esos contextos adicionales le da al agente algo que se parezca a "recordar qué hizo un
 vecino puntual". Incluso la representación más rica del proyecto sigue siendo agregada: $s_2$ es la última acción
@@ -332,7 +332,7 @@ dirección de política— y no permiten ir más allá: no hay, dentro de las re
 que agregar una variable más (por ejemplo, hasta 5 o 6 subestados) fuera a cambiar el signo de $\Delta Q$ en el
 estado dominante, aunque tampoco puede descartarse con los datos disponibles.
 
-### 4.7. La secuencia temporal: primero se aprende la preferencia, después se concentra la visita
+### 4.6. La secuencia temporal: primero se aprende la preferencia, después se concentra la visita
 
 Una pregunta específica del análisis es si la preferencia aprendida ($\Delta Q$) aparece antes o después de que
 aumente la frecuencia de un estado. En prácticamente todas las corridas con más de un checkpoint informativo (E1, E2
