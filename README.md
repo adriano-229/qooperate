@@ -1,11 +1,8 @@
-# QOOPERATE
+# Estudio del aprendizaje de cooperación en el Dilema del Prisionero multiagente
 
-Estudio del comportamiento de agentes que juegan el dilema del prisionero iterado en una red y aprenden mediante
-refuerzo.
+## Estructura del Repositorio
 
-**Código:** `QOOPERATE`
-
-**Alumno:** Adriano Fabris
+**Alumno:** Adriano Fabris — **Código:** QOOPERATE
 
 ---
 
@@ -13,15 +10,15 @@ refuerzo.
 
 El proyecto puede describirse en dos etapas en cuanto al desarrollo de sus objetivos. En la primera, el objetivo fue
 encontrar condiciones para las cuales se posibiliten tanto comportamientos cooperativos como no cooperativos, evaluando
-cómo influían la estructura social (topología de red) y la utilización de la información local en el ritmo de
+cómo influían la estructura social y la utilización de la información local en el ritmo de
 convergencia y el nivel de cooperación alcanzado. Esta etapa fue la descrita en el anteproyecto y la que motivó a llevar
-a cabo el mismo.
+a cabo el presente proyecto.
 
-Debido a que los resultados de todos los experimentos planeados para la primera etapa fueron prácticamente los mismos
-(como veremos luego, una tendencia generalizada hacia la no cooperación) y no existió una marcada posibilidad de un
-comportamiento diferente, es que se decidió estudiar, cómo es que el agente aprendió lo que luego
+Debido a que los resultados de los experimentos planeados para la primera etapa fueron prácticamente los mismos (como
+veremos luego, una tendencia generalizada hacia la no cooperación) y no existió una marcada posibilidad de un
+comportamiento diferente, es que se decidió estudiar cómo es que el agente aprendió lo que luego
 ejecutó. Es decir, el análisis pasó de ser la búsqueda de cuáles parámetros conducían a ciertos comportamientos a cómo
-es que internamente el agente fue aprendiendo y por lo tanto actuando en consecuencia.
+es que internamente el agente fue aprendiendo y, por lo tanto, actuando en consecuencia.
 
 ---
 
@@ -62,16 +59,6 @@ y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero.
 | Castigo (deserción mutua)                | P       | 1     |
 | Sucker (cooperador frente a desertor)    | S       | 0     |
 
-### Topologías de Interacción
-
-Las simulaciones se realizan sobre tres tipos de redes.
-
-1. Regular o Lattice (LA): cada nodo tiene el mismo número $k$ de vecinos conectados localmente.
-2. Small-World o Watts–Strogatz (WS): comienza como una red regular; luego algunas aristas se reconfiguran con
-   probabilidad $\beta$.
-3. Erdős–Rényi (ER): las aristas se colocan entre dos nodos cualesquiera con una probabilidad fija $p$.
-
-![topologies.png](code/report/topologies.png)
 ---
 
 ## Descripción del Framework
@@ -143,7 +130,7 @@ code/
 │   ├── run.py              # Ejecuta los experimentos y guarda datos y artefactos
 │   ├── figures.py          # Genera figuras comparativas a partir de los .parquets
 │   ├── learning_figures.py # Genera heatmaps de ΔQ y visitas de estados
-│   ├── learning_log.py     # Genera un log en Markdown con snapshots del aprendizaje
+│   ├── learning_log.py     # Genera un log en CSV con snapshots del aprendizaje
 │   └── viewer.py           # Replay interactivo de una corrida
 │
 ├── config/<exp>/           # Configuración .yaml de cada experimento
@@ -151,7 +138,7 @@ code/
 ├── results/
 │   ├── data/               # Datos .parquet y artefactos .npz de las corridas
 │   ├── figures/            # Figuras
-│   └── logs/               # Logs en Markdown con snapshots del aprendizaje
+│   └── logs/               # Logs en CSV con snapshots del aprendizaje
 │    
 └── pyproject.toml          # Dependencias
 ```
@@ -167,7 +154,7 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-## Flujo normal de desarrollo
+## Flujo normal para llevar a cabo experimentos
 
 ### 1) Generar YAMLs
 
@@ -200,11 +187,11 @@ python experiments/figures.py <data_parquet1> [<data_parquet2> ...]
 stem.
 
 ```bash
-python experiments/learning_agents.py <data_parquet1> [<data_parquet2> ...]
+python experiments/learning_figures.py <data_parquet1> [<data_parquet2> ...]
 ```
 
-`learning_agents.py` genera un JPG en `results/figures/learning_<prefijo>/` con los heatmaps de ΔQ y visitas de estados
-de los agentes.
+`learning_figures.py` genera un JPG en `results/figures/<prefijo>/` con los heatmaps de ΔQ y de visitas de estados
+asociados a cada corrida.
 
 ### 4) Replay interactivo
 
@@ -226,9 +213,10 @@ python experiments/learning_log.py --snapshots 8 <data_parquet1>
 `learning_log.py` reutiliza los mismos artefactos que `learning_figures.py`/`viewer.py` (`<stem>.parquet` +
 `learning_<stem>.npz`), sin volver a correr la simulación ni tocar su formato. Por cada parquet genera un archivo
 `results/logs/<prefijo>/learning_log_<stem>.csv` con una tabla en formato CSV (separador punto y coma `;` y coma decimal
-`,` : una fila por estado (decodificado igual que en los heatmaps) y una
-columna por snapshot (por defecto 5, equiespaciados entre 0% y 100% de las rondas, mapeados al checkpoint disponible más
-cercano, y excluyendo el 0%; configurable con `--snapshots`).
+`,`): una fila por estado (decodificado igual que en los heatmaps) y una columna por snapshot. Por defecto se usan 4
+puntos equiespaciados entre 0% y 100% de las rondas, se descarta el 0% y se mapea cada porcentaje al checkpoint
+disponible más cercano; en la práctica eso deja los checkpoints intermedios y el final (33%, 67% y 100%). El valor de
+`--snapshots` permite cambiar esa grilla.
 
 Cada snapshot genera tres columnas:
 
@@ -239,30 +227,10 @@ Cada snapshot genera tres columnas:
 **Estructura del CSV:**
 
 ```
-Estado;25%_ΔQ;25%_F;25%_P;50%_ΔQ;50%_F;50%_P;75%_ΔQ;75%_F;75%_P;100%_ΔQ;100%_F;100%_P
-(0,0,0,0);x;x;x;x;x;x;x;x;x;x;x;x
-(0,0,0,1);x;x;x;x;x;x;x;x;x;x;x;x
+Estado;33%_ΔQ;33%_F;33%_P;67%_ΔQ;67%_F;67%_P;100%_ΔQ;100%_F;100%_P
+(0,0,0,0);x;x;x;x;x;x;x;x;x
+(0,0,0,1);x;x;x;x;x;x;x;x;x
 ...
 ```
-
-## Referencias
-
-**Libros**
-
-- Axelrod, R. (1984). *The Evolution of Cooperation*.
-- Brunton, S. & Kutz, J. (2019). *Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and
-  Control*.
-
-**Videos**
-
-- Veritasium (2022). *This game theory problem will change the way you see the
-  world*. [YouTube](https://www.youtube.com/watch?v=mScpHTIi-kM)
-
-- Veritasium (2023). *Something Strange Happens When You Trace How Connected We
-  Are*. [YouTube](https://www.youtube.com/watch?v=CYlon2tvywA&t=500s)
-
-**Recursos en el repositorio**
-
-- `/archive/anteproyecto.md` — definición inicial del proyecto.
 
 ---

@@ -1,4 +1,6 @@
-# QOOPERATE — Estudio del aprendizaje de cooperación en el Dilema del Prisionero multiagente
+# Estudio del aprendizaje de cooperación en el Dilema del Prisionero multiagente
+
+## Informe Final
 
 **Alumno:** Adriano Fabris — **Código:** QOOPERATE
 
@@ -167,7 +169,7 @@ a
 ![states.png](code/report/states.png)
 
 En la siguiente figura podemos visualizar los mapas de calor de $\Delta Q (s)$ y $F (s)$ junto con la descripción
-específica de uno de los estados a modo de ejemplo.
+específica de uno de los estados para el checkpoint correspondiente al 100 %:
 
 ![learning_e0_test_n100_seed107420369.jpg](code/report/learning_e0_test_n100_seed107420369.jpg)
 
@@ -222,10 +224,11 @@ casos. $\alpha$ regula la velocidad de aprendizaje y no la dirección de converg
 
 ![combined-image.jpg](code/results/figures/e2/combined-image.jpg)
 
-En **E3 (exploración $\epsilon$)** es la excepción a esa monotonía: la concentración es máxima en $\epsilon=0.2$ ($F$
+El **E3 (exploración $\epsilon$)** es la excepción a esa monotonía: la concentración es máxima en $\epsilon=0.2$ ($F$
 final 0.66) y cae tanto para $\epsilon=0.05$ ($F=0.28$) como para $\epsilon=0.5$ ($F=0.26$, y ahí ni
 siquiera $(1,1,0,0)$ es el estado más visitado). La lectura más simple es que hay dos efectos en tensión: muy poca
-exploración deja que la política inicial —todavía ruidosa— tarde en converger a un comportamiento uniforme, y demasiada
+exploración deja que las políticas iniciales —ruidosas— demoren la convergencia hacia el comportamiento no
+cooperativo, y demasiada
 exploración mantiene una fracción de acciones aleatorias que nunca deja de mezclar la distribución de estados, por más
 rondas que pasen. $\epsilon=0.2$ es donde ese balance concentra más visitas en el horizonte observado.
 
@@ -233,13 +236,14 @@ rondas que pasen. $\epsilon=0.2$ es donde ese balance concentra más visitas en 
 
 ![combined-image.jpg](code/results/figures/e3/combined-image.jpg)
 
-En **E4 (vecindad $\rho$)**, aumentar la profundidad de vecindario también acelera la concentración ($F (1,1,0,0)$ pasa
-de 0.06/0.34/0.54 con $\rho=1$ a 0.24/0.60/0.71 con $\rho=4$), porque promediar sobre más vecinos estabiliza $s_1$
+En **E4 (vecindad $\rho$)**, aumentar la profundidad de vecindario también acelera la concentración $F (1,1,0,0)$ pasa
+de 0.06/0.34/0.54 con $\rho=1$ a 0.24/0.60/0.71 con $\rho=4$), ya que promediar sobre más vecinos estabiliza $s_1$
 y $s_3$ entre rondas. Pero sigue siendo más información de la misma naturaleza, así que tampoco cambia el resultado.
 
 ![combined-image.jpg](code/results/figures/e4/combined-image.jpg)
 
-**E5 (subrepresentaciones de $s$)** es el único experimento donde la variable manipulada cambia la naturaleza de lo que
+El **E5 (subrepresentaciones de $s$)** es el único experimento donde la variable manipulada cambia la naturaleza de lo
+que
 el
 agente puede distinguir, no solo la cantidad de información espacial. Con $s_1$ el agente ni siquiera registra su propia
 última acción, así que con dos estados posibles casi todo cae en "vecindario no cooperador" ($F=0.98$) de forma casi
@@ -252,11 +256,12 @@ total (98 % → 86 % → 75 % → 52 %), pero en los cuatro casos ese estado dom
 ![combined-image.jpg](code/results/figures/e5/combined-image.jpg)
 
 En casi todas las corridas con más de un checkpoint informativo, el $\Delta Q$ del estado que
-termina dominando ya es fuertemente negativo en el checkpoint temprano, cuando su $F$ todavía es baja. Esto es
+termina dominando, $(1,1,0,0)$, ya es fuertemente negativo en el checkpoint temprano, cuando su $F$ todavía es baja.
+Esto es
 consistente con la estructura de pagos: contra un vecindario que ya deserta, la diferencia entre cooperar $S=0$ y
 desertar $P=1$ es grande desde la primera vez que se visita el estado, así que separar $Q (s,C)$ de $Q (s,D)$ no
 requiere muchas actualizaciones. Lo que sí toma tiempo es que la población entera converja al comportamiento que hace de
-ese estado el más frecuente.
+ese estado el más frecuente, aunque ese tiempo se vea fácilmente modificable mediante $\alpha$ o $\rho$.
 
 ---
 
@@ -270,7 +275,8 @@ situación, pero en ningún caso el signo de la preferencia cambia.
 Interpretado con el marco de Axelrod, esto es coherente con la Proposición 5 (ALL D es colectivamente estable) y
 explicable por la Proposición 6: invadir esa estabilidad requiere discriminar entre vecinos, y la representación de
 estado usada —aun en su versión más rica, $s_{1234}$— agrega la información del vecindario en fracciones y promedios en
-lugar de conservar historia por vecino. Ninguna de las variables manipuladas introduce ese mecanismo, así que ninguna
+lugar de conservar historia por vecino. Ninguna de las variables manipuladas introduce ese mecanismo, así que es de
+esperar que ninguna
 cambia el resultado cualitativo.
 
 **Trabajo
