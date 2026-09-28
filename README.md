@@ -1,24 +1,24 @@
-# QOOPERATE
+# Estudio del aprendizaje de cooperación en el Dilema del Prisionero multiagente
 
-Estudio del surgimiento o colapso de la cooperación en redes de agentes Q-Learning que juegan un Dilema del Prisionero
-Iterado con sus vecinos.
+## Estructura del Repositorio
 
-**Código:** `QOOPERATE`
-
-**Alumno:** Adriano Fabris
-
-> ⚠️ Este documento describe el proyecto y los experimentos que se llevarán a cabo, lo marcado con ~~tachado~~ indica un
-> contenido eliminado con respecto al anteproyecto. Para ver los motivos, ver la sección "Cambios al anteproyecto" al
-> final de este
-> documento.
+**Alumno:** Adriano Fabris — **Código:** QOOPERATE
 
 ---
 
 ## Objetivo
 
-El proyecto busca explorar el surgimiento o colapso de la cooperación en sociedades artificiales dinámicas compuestas
-por agentes racionales que aprenden mediante refuerzo, evaluando cómo la estructura social (topología de red) y la
-utilización de la información local influyen en el comportamiento colectivo.
+El proyecto puede describirse en dos etapas en cuanto al desarrollo de sus objetivos. En la primera, el objetivo fue
+encontrar condiciones para las cuales se posibiliten tanto comportamientos cooperativos como no cooperativos, evaluando
+cómo influían la estructura social y la utilización de la información local en el ritmo de
+convergencia y el nivel de cooperación alcanzado. Esta etapa fue la descrita en el anteproyecto y la que motivó a llevar
+a cabo el presente proyecto.
+
+Debido a que los resultados de los experimentos planeados para la primera etapa fueron prácticamente los mismos (como
+veremos luego, una tendencia generalizada hacia la no cooperación) y no existió una marcada posibilidad de un
+comportamiento diferente, es que se decidió estudiar cómo es que el agente aprendió lo que luego
+ejecutó. Es decir, el análisis pasó de ser la búsqueda de cuáles parámetros conducían a ciertos comportamientos a cómo
+es que internamente el agente fue aprendiendo y, por lo tanto, actuando en consecuencia.
 
 ---
 
@@ -59,16 +59,6 @@ y $2R > T + S$, correspondientes a la definición del Dilema del Prisionero.
 | Castigo (deserción mutua)                | P       | 1     |
 | Sucker (cooperador frente a desertor)    | S       | 0     |
 
-### Topologías de Interacción
-
-Las simulaciones se realizan sobre tres tipos de redes.
-
-1. Regular o Lattice (LA): cada nodo tiene el mismo número $k$ de vecinos conectados localmente.
-2. Small-World o Watts–Strogatz (WS): comienza como una red regular; luego algunas aristas se reconfiguran con
-   probabilidad $\beta$.
-3. Erdős–Rényi (ER): las aristas se colocan entre dos nodos cualesquiera con una probabilidad fija $p$.
-
-![topologies.png](code/report/topologies.png)
 ---
 
 ## Descripción del Framework
@@ -103,30 +93,59 @@ parámetros.
 
 ### Parámetros configurables
 
-| Parámetro            | Descripción                                                                                                           | Restricciones                                         |
-|----------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| `n_rounds`           | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
-| `n_agents`           | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
-| `topology`           | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
-| `k`                  | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
-| `alpha`              | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
-| `epsilon`            | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
-| `rho`                | Profundidad del vecindario                                                                                            | ≥ 1                                                   |
-| `gamma`              | Factor de descuento en Q-Learning                                                                                     | > 0                                                   |
-| `reward_window`      | Ventana de recompensa reciente usada en el estado                                                                     | ≥ 1                                                   |
-| `sample_every`       | Cada cuántas rondas se guarda un punto en el resultado (granularidad del muestreo; no afecta el aprendizaje)          | ≥ 1                                                   |
-| `coop_n_divisions`   | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
-| `reward_n_divisions` | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
-| `ws_beta`            | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
-| `n_seeds`            | Cantidad de semillas para reproducibilidad                                                                            | ≥ 0                                                   |
+| Parámetro              | Descripción                                                                                                           | Restricciones                                         |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| `n_rounds`             | Cantidad de rondas de la simulación                                                                                   | > 0                                                   |
+| `n_agents`             | Cantidad de agentes $N$                                                                                               | debe ser cuadrado perfecto (`100`, `400`, `900`, ...) |
+| `topology`             | Tipo de red: `lattice`, `watts_strogatz` o `erdos_renyi`                                                              | —                                                     |
+| `state_representation` | Representación del estado: `S1`, `S12`, `S123` o `S1234`                                                              | —                                                     |
+| `k`                    | Grado (medio para WS y ER) de conectividad de la red                                                                  | debe ser `4`, `8` o `12`                              |
+| `alpha`                | Tasa de aprendizaje en Q-Learning                                                                                     | > 0                                                   |
+| `epsilon`              | Parámetro de exploración ε-greedy                                                                                     | > 0                                                   |
+| `rho`                  | Profundidad del vecindario                                                                                            | ≥ 1                                                   |
+| `gamma`                | Factor de descuento en Q-Learning                                                                                     | > 0                                                   |
+| `reward_window`        | Ventana de recompensa reciente usada en el estado                                                                     | ≥ 1                                                   |
+| `sample_every`         | Cada cuántas rondas se guarda un punto en el resultado (granularidad del muestreo; no afecta el aprendizaje)          | ≥ 1                                                   |
+| `coop_n_divisions`     | Cantidad de divisiones para discretizar la tasa de cooperación del vecindario (equiespaciadas en [0,1])               | ≥ 0                                                   |
+| `reward_n_divisions`   | Cantidad de divisiones para discretizar la recompensa reciente (equiespaciadas en [0,5], rango de la matriz de pagos) | ≥ 0                                                   |
+| `ws_beta`              | Probabilidad de reconexión en Watts-Strogatz                                                                          | en [0, 1]                                             |
+| `n_seeds`              | Cantidad de semillas para la corrida                                                                                  | ≥ 0                                                   |
 
 ---
 
-## Uso
+## Estructura principal del repositorio
 
-### 1. Instalación
+```text
+code/
+├── src/qooperate/         
+│   ├── agent.py            # Agente Q-learning
+│   ├── network.py          # Topologías
+│   ├── simulation.py       # Loop de aprendizaje
+│   ├── payoff.py           # Matriz del IPD
+│   ├── utils.py            
+│   └── metrics.py          
+│
+├── experiments/            
+│   ├── generate_yamls.py   # Genera la configuración de los experimentos mediante archivos .yaml  
+│   ├── run.py              # Ejecuta los experimentos y guarda datos y artefactos
+│   ├── figures.py          # Genera figuras comparativas a partir de los .parquets
+│   ├── learning_figures.py # Genera heatmaps de ΔQ y visitas de estados
+│   ├── learning_log.py     # Genera un log en CSV con snapshots del aprendizaje
+│   └── viewer.py           # Replay interactivo de una corrida
+│
+├── config/<exp>/           # Configuración .yaml de cada experimento
+│
+├── results/
+│   ├── data/               # Datos .parquet y artefactos .npz de las corridas
+│   ├── figures/            # Figuras
+│   └── logs/               # Logs en CSV con snapshots del aprendizaje
+│    
+└── pyproject.toml          # Dependencias
+```
 
-Para instalar el paquete con las dependencias necesarias hay que colocarse en la carpeta `/code` y ejecutar:
+## Instalación
+
+Desde `code/`:
 
 ```bash
 python3 -m venv .venv
@@ -135,146 +154,83 @@ pip install --upgrade pip
 pip install -e .
 ```
 
-### 2. Generar los YAMLs interactivamente
+## Flujo normal para llevar a cabo experimentos
+
+### 1) Generar YAMLs
 
 ```bash
 python experiments/generate_yamls.py
 ```
 
-Pide un nombre de experimento y luego cada parámetro de la tabla anterior, uno por uno, con su valor por defecto entre
-paréntesis (cuando se presiona _enter_ se acepta el valor por defecto). Se puede pasar más de un valor por parámetro,
-separados por espacio (ej.
-`alpha (debe ser > 0) (default: 0.1): 0.05 0.1 0.2`) — el script arma el producto cartesiano de todas las combinaciones
-y escribe un YAML por combinación en `config/<experimento>/`, nombrando cada archivo solo con los parámetros que
-realmente varían (los que quedaron fijos no aparecen en el nombre). Cada parámetro se valida al ingresarlo (ej. `k` debe
-ser 4/8/12, `n_agents` debe ser cuadrado perfecto) y, si un valor no es válido, se vuelve a pedir solo ese parámetro.
+El script pide un nombre de experimento y luego los parámetros uno por uno. Si se ingresan varios valores, genera el
+producto cartesiano y escribe un YAML por combinación en `config/<experimento>/`.
 
-### 3. Correr las configuraciones
+### 2) Ejecutar una corrida
 
 ```bash
 python experiments/run.py <config_yaml> [<config_yaml2> ...]
 ```
 
-Ejemplo:
+`run.py` guarda en `results/data/<prefijo>/`:
+
+- `<stem>.parquet` con las métricas muestreadas;
+- `learning_<stem>.npz` con `delta_q` y visitas de estados;
+- `replay_<stem>.npz` con acciones, recompensas e historiales por ronda.
+
+### 3) Generar figuras
 
 ```bash
-python experiments/run.py config/e0/e0_s0.yaml config/e0/e0_s1.yaml
+python experiments/figures.py <data_parquet1> [<data_parquet2> ...]
 ```
 
-Cada YAML se corre de forma independiente; guarda su Parquet en `results/<prefijo>/<nombre_yaml>.parquet`, con la
-evolución temporal completa (muestreada según `sample_every`) de tasa de cooperación, recompensa media y Gini de
-ventana.
-
-### 4. Generar figuras
+`figures.py` compara uno o más parquets y escribe un JPG en `results/figures/<prefijo>/`, usando el prefijo común del
+stem.
 
 ```bash
-python experiments/figures.py <plot_smoothing> <e0_1.parquet> [<e0_2.parquet> ...]
+python experiments/learning_figures.py <data_parquet1> [<data_parquet2> ...]
 ```
 
-Ejemplo
+`learning_figures.py` genera un JPG en `results/figures/<prefijo>/` con los heatmaps de ΔQ y de visitas de estados
+asociados a cada corrida.
+
+### 4) Replay interactivo
 
 ```bash
-python experiments/figures.py 10 results/e0/e0_s0.parquet results/e0/e0_s1.parquet
+python experiments/viewer.py <data_parquet>
 ```
 
-Por cada Parquet genera un PNG con fondo transparente, mostrando ambas métricas superpuestas, en las que:
+El replay consume el parquet y sus `learning_*.npz` / `replay_*.npz` asociados. No vuelve a correr la simulación. Esta
+UI interactiva contiene el grafo de la interacción y la evolución de los 3 gráficos ya descritos: de cooperación y gini,
+heatmap de ΔQ y heatmap de visitas de estados.
 
-- Línea continua — denota la tasa global de cooperación $C_t$
-- Línea punteada — denota el índice de Gini de ventana $G$ (desigualdad reciente de recompensas)
+### 5) Log de aprendizaje en CSV
 
-Incluye leyenda para distinguir ambas curvas. `plot_smoothing` (primer argumento de `figures.py`) es el tamaño de la
-media móvil aplicada al graficar.
+```bash
+python experiments/learning_log.py <data_parquet1> [<data_parquet2> ...]
+python experiments/learning_log.py --snapshots 8 <data_parquet1>
+```
 
----
+`learning_log.py` reutiliza los mismos artefactos que `learning_figures.py`/`viewer.py` (`<stem>.parquet` +
+`learning_<stem>.npz`), sin volver a correr la simulación ni tocar su formato. Por cada parquet genera un archivo
+`results/logs/<prefijo>/learning_log_<stem>.csv` con una tabla en formato CSV (separador punto y coma `;` y coma decimal
+`,`): una fila por estado (decodificado igual que en los heatmaps) y una columna por snapshot. Por defecto se usan 4
+puntos equiespaciados entre 0% y 100% de las rondas, se descarta el 0% y se mapea cada porcentaje al checkpoint
+disponible más cercano; en la práctica eso deja los checkpoints intermedios y el final (33%, 67% y 100%). El valor de
+`--snapshots` permite cambiar esa grilla.
 
-## Métricas de Evaluación
+Cada snapshot genera tres columnas:
 
-* Tasa global de cooperación $C_t$: proporción de agentes cooperadores, muestreadas cada `sample_every` rondas.
-* Promedio de recompensas por agente: se guarda y acumula para calcular $G$.
-* Índice de Gini de ventana $G$: desigualdad en la distribución de la recompensa acumulada dentro de la ventana reciente
-  de `sample_every` rondas.
-* ~~Estabilidad temporal (volatilidad)~
-* ~~Tiempo hasta estabilización~~
+- **ΔQ**: Q (s,C) - Q (s,D)
+- **F**: frecuencia relativa de visitas del estado en ese checkpoint, V (s)/sum (V)
+- **P**: ΔQ × F, una medida de cuánto "pesa" ese ΔQ según la frecuencia de visita del estado
 
----
+**Estructura del CSV:**
 
-## Hipótesis
-
-### Hipótesis Principales
-
-**H1. Efecto de la estructura:** la topología de la red afecta significativamente el nivel final de cooperación. ¿La
-forma en que los agentes están conectados influye en su capacidad para cooperar?
-
-**H2. Efecto del aprendizaje:** la tasa de aprendizaje interfiere en el camino hacia un equilibrio (de haber uno). ¿Cómo
-impacta la velocidad de aprendizaje en el largo plazo?
-
-**H3. Efecto de la exploración:** ciertos valores de exploración altos ($\varepsilon > 0.1$) favorecen el hallazgo de
-entornos mayormente cooperativos. ¿Cómo impacta el tiempo destinado a explorar en el largo plazo?
-
-### Hipótesis Alternativas
-
-~~**HA1.** La presencia de agentes aleatorios puede prevenir el colapso total de la cooperación.~~
-
-**HA2.** La inclusión de información extendida (vecinos de segundo o mayor orden $\rho > 1$) puede fortalecer la
-cooperación.
-
-**HA3.** La desigualdad de recompensas aumenta con el grado medio de conectividad de la red, $k$.
-
----
-
-## Cambios al anteproyecto
-
-### Métricas
-
-La métrica de estabilidad temporal (volatilidad) se descartó debido a que el interés de visualizar un gráfico y detectar
-visualmente la medida resultaba ser de mayor interés que simplemente el número.
-
-La métrica de tiempo hasta estabilización se descartó debido a que esta asumía un comportamiento convergente y a su vez
-hacía uso de la métrica de estabilidad temporal, también descartada.
-
-### Hipótesis H2 y H3
-
-Se reescribieron por claridad y para que sean más fácilmente evaluables.
-
-### Hipótesis alternativa HA1
-
-La hipótesis HA1 se descartó debido a que el componente aleatorio que se buscaba introducir con la inclusión de tales
-agentes se ve reflejado en la exploración $\varepsilon$-greedy, que ya está presente en el modelo. Por lo tanto, la
-hipótesis HA1 se considera redundante y no se evaluará en el proyecto.
-
-### Cambio en la bibliografía
-
-Se agrega a la bibliografía el libro de Brunton & Kutz (2019) como referencia para RL (capítulo 11:
-Reinforcement Learning).
-
-Se descarta el uso de la referencia de Shoham et al. (2007).
-
-
----
-
-## Referencias
-
-**Libros**
-
-- Russell, S. & Norvig, P. (2021). *Artificial Intelligence: A Modern Approach* (4ª ed.).
-- Axelrod, R. (1984). *The Evolution of Cooperation*.
-- Brunton, S. & Kutz, J. (2019). *Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and
-  Control*.
-
-**Papers**
-
-~~- Shoham, Y. et al. (2007). *If multi-agent learning is the answer, what is the question?*.~~
-
-**Videos**
-
-- Veritasium (2022). *This game theory problem will change the way you see the
-  world*. [YouTube](https://www.youtube.com/watch?v=mScpHTIi-kM)
-
-- Veritasium (2023). *Something Strange Happens When You Trace How Connected We
-  Are*. [YouTube](https://www.youtube.com/watch?v=CYlon2tvywA&t=500s)
-
-**Recursos en el repositorio**
-
-- `/archive/anteproyecto.md` — definición inicial del proyecto.
+```
+Estado;33%_ΔQ;33%_F;33%_P;67%_ΔQ;67%_F;67%_P;100%_ΔQ;100%_F;100%_P
+(0,0,0,0);x;x;x;x;x;x;x;x;x
+(0,0,0,1);x;x;x;x;x;x;x;x;x
+...
+```
 
 ---

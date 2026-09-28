@@ -12,14 +12,27 @@ Uso:
 
 from __future__ import annotations
 
+import random
 import sys
 from math import isqrt
 from pathlib import Path
+from collections.abc import Callable
 
 CONFIG_DIR = Path(__file__).resolve().parents[1] / "config"
 
 TOPOLOGY_MAP = {"1": "lattice", "2": "watts_strogatz", "3": "erdos_renyi"}
 TOPOLOGY_ABBR = {"lattice": "la", "watts_strogatz": "ws", "erdos_renyi": "er"}
+
+STATE_REPR_MAP = {
+    "1": "S1",
+    "S1": "S1",
+    "2": "S12",
+    "S12": "S12",
+    "3": "S123",
+    "S123": "S123",
+    "4": "S1234",
+    "S1234": "S1234",
+}
 
 
 class Cancelled(Exception):
@@ -74,11 +87,11 @@ def _rho_value(v: str) -> int:
     return x
 
 
-def _seed_value(v: str) -> int:
-    x = int(v)
-    if x < 0:
-        raise ValueError("debe ser >= 0")
-    return x
+def _state_representation(v: str) -> str:
+    key = v.strip().upper()
+    if key not in STATE_REPR_MAP:
+        raise ValueError("debe ser 1 (S1), 2 (S12), 3 (S123) o 4 (S1234)")
+    return STATE_REPR_MAP[key]
 
 
 def _ws_beta(v: str) -> float:
@@ -92,13 +105,14 @@ def _ws_beta(v: str) -> float:
 #  default, validador de un único token)
 PARAMETERS = [
     ("topology", "t", "topology (1 lattice, 2 watts_strogatz, 3 erdos_renyi)", "1", _topology),
+    ("state_representation", "sr", "state_representation (1 S1, 2 S12, 3 S123, 4 S1234)", "S12", _state_representation),
     ("n_agents", "n", "n_agents (debe ser cuadrado perfecto)", "100", _perfect_square),
     ("k", "k", "k (must be 4, 8 or 12)", "8", _k_value),
     ("alpha", "a", "alpha (debe ser > 0)", "0.1", _positive_float),
     ("epsilon", "e", "epsilon (debe ser > 0)", "0.1", _positive_float),
     ("gamma", "g", "gamma (debe ser > 0)", "0.9", _positive_float),
     ("rho", "r", "rho (debe ser >= 1)", "1", _rho_value),
-    ("seed", "s", "seed (debe ser >= 0)", "0", _seed_value),
+    ("n_seeds", "ns", "n_seeds (debe ser > 0, se generarán semillas al azar)", "1", _positive_int),
     ("n_rounds", "nr", "n_rounds (debe ser > 0)", "2000", _positive_int),
     ("reward_window", "rw", "reward_window (debe ser >= 1)", "10", _positive_int),
     ("sample_every", "se", "sample_every (debe ser >= 1)", "10", _positive_int),
@@ -108,7 +122,7 @@ PARAMETERS = [
 ]
 
 
-def ask_values(key: str, prompt_text: str, default: str, validator) -> list:
+def ask_values(key: str, prompt_text: str, default: str, validator: Callable[[str], object]) -> list[object]:
     while True:
         raw = input(f"{prompt_text} (default: {default}): ").strip()
         if raw.upper() == "Q":
@@ -150,37 +164,51 @@ def main() -> None:
             return
 
         answers: dict[str, list] = {}
-        for key, abbr, prompt_text, default, validator in PARAMETERS:
+        for key, _abbr, prompt_text, default, validator in PARAMETERS:
             answers[key] = ask_values(key, prompt_text, default, validator)
 
-        # Producto cartesiano manual (evita depender de itertools solo
-        # por legibilidad del orden de combinación, aunque itertools.product
-        # serviría igual).
+        # Producto cartesiano sin expandir n_seeds todavía
         import itertools
 
         keys = [p[0] for p in PARAMETERS]
         abbrs = {p[0]: p[1] for p in PARAMETERS}
-        varying_keys = [k for k in keys if len(answers[k]) > 1]
 
-        combos = []
+        combos_no_seeds = []
         for values in itertools.product(*(answers[k] for k in keys)):
-            combos.append(dict(zip(keys, values)))
+            combos_no_seeds.append(dict(zip(keys, values)))
 
-        # Nombre: solo incluye en el nombre los parámetros que realmente
-        # varían entre combinaciones (los fijos no aportan información).
+        rng = random.Random(42)
+        final_combos = []
+        for combo in combos_no_seeds:
+            n_seeds = combo["n_seeds"]
+            seeds = [rng.randint(0, 2 ** 31 - 1) for _ in range(n_seeds)]
+            for seed in seeds:
+                new_combo = {k: v for k, v in combo.items() if k != "n_seeds"}
+                new_combo["seed"] = seed
+                final_combos.append(new_combo)
+
+        # Recalcular claves que varían entre todos los combos finales (sin n_seeds)
+        all_keys = [k for k in keys if k != "n_seeds"] + ["seed"]
+        varying_keys = [
+            k for k in all_keys
+            if len({c[k] for c in final_combos}) > 1
+        ]
+
         names = []
-        for combo in combos:
-            parts = [
-                f"{abbrs[k]}{format_value_for_name(k, combo[k])}" for k in varying_keys
-            ]
+        for combo in final_combos:
+            parts = []
+            for k in varying_keys:
+                # Usar la abreviatura correspondiente (si existe, si no usar k)
+                abbr = abbrs.get(k, k)
+                parts.append(f"{abbr}{format_value_for_name(k, combo[k])}")
             suffix = "_".join(parts) if parts else "base"
             names.append(f"{experiment_name}_{suffix}")
 
         print(f"\nSe generarán los siguientes yamls en config/{experiment_name}/:")
-        for name, combo in zip(names, combos):
+        for name, combo in zip(names, final_combos):
             summary = ", ".join(f"{k}={combo[k]}" for k in varying_keys) or "(sin variación)"
             print(f"  {name}.yaml  [{summary}]")
-        print(f"\nTotal de yamls: {len(combos)}")
+        print(f"\nTotal de yamls: {len(final_combos)}")
 
         confirm = input("\n¿Confirmar generación? (Y/n, Q para cancelar): ").strip()
         if confirm.upper() == "Q":
@@ -191,7 +219,7 @@ def main() -> None:
 
         out_dir = CONFIG_DIR / experiment_name
         out_dir.mkdir(parents=True, exist_ok=True)
-        for name, combo in zip(names, combos):
+        for name, combo in zip(names, final_combos):
             out_path = out_dir / f"{name}.yaml"
             out_path.write_text(build_yaml_text(combo), encoding="utf-8")
             print(f"Escrito: {out_path}")

@@ -2,7 +2,7 @@ from collections import deque
 
 import numpy as np
 
-from qooperate.utils import encode_state, discretize
+from qooperate.utils import encode_state, discretize, StateRepresentation
 
 COOPERATE = 0
 DEFECT = 1
@@ -11,13 +11,16 @@ DEFECT = 1
 class QLearningAgent:
 
     def __init__(
-            self, alpha, gamma, epsilon, n_states, n_actions, reward_window, rng: np.random.Generator
+            self, alpha, gamma, epsilon, n_states, n_actions, reward_window, rng: np.random.Generator,
+            state_representation: StateRepresentation,
     ):
         self.alpha, self.gamma, self.epsilon = alpha, gamma, epsilon
         self.rng = rng
         self.q_table = np.zeros((n_states, n_actions))
         self.last_action = rng.choice([COOPERATE, DEFECT])
         self.reward_history: deque[float] = deque(maxlen=reward_window)
+        self.state_representation = state_representation
+        self.state_visits = np.zeros(n_states, dtype=np.int64)
 
     def select_action(self, state: int) -> int:
         if self.rng.random() < self.epsilon:
@@ -33,11 +36,12 @@ class QLearningAgent:
         self.q_table[state, action] = current_q + self.alpha * (target - current_q)
 
     def compute_state(
-        self,
-        neighbor_actions: list[int],
-        coop_bins: list[float],
-        reward_bins: list[float],
+            self,
+            neighbor_actions: list[int],
+            coop_bins: list[float],
+            reward_bins: list[float],
             last_action: int,
+            count_visit: bool = True,
     ) -> int:
         """last_action se recibe como parámetro (no self.last_action) para
         poder calcular tanto el estado actual como el next_state dentro
@@ -54,4 +58,14 @@ class QLearningAgent:
         mean_reward = np.mean(self.reward_history) if self.reward_history else 0.0
         s4 = discretize(mean_reward, reward_bins)
         n_s3, n_s4 = len(coop_bins) + 1, len(reward_bins) + 1
-        return encode_state(s1, s2, s3, s4, n_s3=n_s3, n_s4=n_s4)
+
+        state = encode_state(
+            s1, s2, s3, s4,
+            representation=self.state_representation,
+            n_s3=n_s3,
+            n_s4=n_s4,
+        )
+
+        if count_visit:
+            self.state_visits[state] += 1
+        return state
